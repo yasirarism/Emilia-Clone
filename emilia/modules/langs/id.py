@@ -4,19 +4,17 @@ __lang__ = "🇮🇩 Indonesia"
 id = {
 # main stuff
 	"start_text": """
-Hai {}, nama saya {}! Saya seorang manajer grup yang dikelola oleh [master saya ini](tg://user?id={}).
-Untuk mendapatkan info status dan update bot ini, anda dapat bergabung dengan channel kami [Ayra's Bot News](https://t.me/AyraBotNews)
+Halo Guys {}, namaku {}! Saya seorang manajer grup yang dikelola oleh master saya yang bernama [Yasir Aris M 🙎](tg://user?id={}).
+Anda dapat bergabung dengan channel saya [YasiPedia Channel](https://t.me/YasirPediaChannel) atau [Ayra's Bot News](https://t.me/AyraBotNews)
 
 Ada masalah atau butuh bantuan lebih?
 Gabung grup [Emilia Official Support](https://t.me/EmiliaOfficial)!
 
-Anda dapat menemukan daftar perintah yang tersedia dengan /help.
+Anda bisa menemukan daftar perintah yang tersedia dengan /help.
 
-Jika Anda menikmati menggunakan saya, dan/atau ingin membantu saya bertahan hidup, tekan /donate untuk membantu \
-mendanai/meningkatkan VPS saya!
 """,
 	"help_text": """
-Hai! Nama saya adalah *Emilia*.
+Hai! Nama saya adalah *Frozen Bot*.
 Saya adalah bot manajemen grup dengan beberapa kelebihan yang menyenangkan! Silahkan lihat berikut ini untuk beberapa ide dari \
 hal-hal yang bisa saya bantu.
 
@@ -32,7 +30,6 @@ hal-hal yang bisa saya bantu.
 
 All commands can either be used with / or !.
 
-Dan berikut ini:
 """,
 	"donate_text": """Hai, senang mendengar Anda ingin menyumbang!
 Butuh banyak pekerjaan untuk [pencipta saya](tg://user?id=388576209) untuk membawa saya ke tempat saya sekarang, dan \
