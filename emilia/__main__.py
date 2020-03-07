@@ -137,9 +137,8 @@ def start(bot: Bot, update: Update, args: List[str]):
         else:
             first_name = update.effective_user.first_name
             buttons = InlineKeyboardMarkup(
-                [[InlineKeyboardButton(text="Source Code", url="https://github.com/yasirarism/Emilia-Clone")],
-                [[InlineKeyboardButton(text="🎉 Tambahkan saya ke grup", url="https://t.me/YasirAssistant_bot?startgroup=new")],
-                [InlineKeyboardButton(text="💭 Bahasa", callback_data="main_setlang"), InlineKeyboardButton(text="⚙️ Sambungkan Grup", callback_data="main_connect")],
+                [[InlineKeyboardButton(text="🎉 Tambahkan ke Grup", url="https://t.me/YasirAssistant_bot?startgroup=new")],
+                [InlineKeyboardButton(text="💭 Bahasa", callback_data="main_setlang"), InlineKeyboardButton(text="⚙️ Hubungkan Grup", callback_data="main_connect")],
                 [InlineKeyboardButton(text="👥 Grup Pendukung", url="https://t.me/EmiliaOfficial"), InlineKeyboardButton(text="🔔 Update Channel", url="https://t.me/AyraBotNews")],
                 [InlineKeyboardButton(text="❓ Bantuan", url="https://t.me/YasirAssistant_bot?start=help"), InlineKeyboardButton(text="💖 Donasi", url="http://ayrahikari.github.io/donations.html")]])
             update.effective_message.reply_text(
