@@ -9,6 +9,9 @@ Based on [marie bot](https://github.com/PaulSonOfLars/tgbot)
 
 Dapat ditemukan di telegram sebagai [Emilia](https://t.me/EmiliaHikariBot).
 
+## Heroku Deploy
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/yasirarism/TG-Ubot-X)
 
 Awalnya bot manajemen grup sederhana dengan beberapa fitur admin, telah berevolusi, menjadi sangat modular dan
 
