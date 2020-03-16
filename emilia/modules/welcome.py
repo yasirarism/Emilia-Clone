@@ -1,5 +1,6 @@
 import html, time
 import re
+import datetime
 import threading
 import requests
 from typing import Optional, List
@@ -25,7 +26,7 @@ from emilia.modules.helper_funcs.alternate import send_message
 
 
 OWNER_SPECIAL = False
-VALID_WELCOME_FORMATTERS = ['first', 'last', 'fullname', 'username', 'id', 'count', 'chatname', 'mention']
+VALID_WELCOME_FORMATTERS = ['first', 'last', 'fullname', 'username', 'id', 'count', 'chatname', 'mention', 'time']
 
 ENUM_FUNC_MAP = {
 	sql.Types.TEXT.value: dispatcher.bot.send_message,
@@ -144,6 +145,15 @@ def new_member(bot: Bot, update: Update):
 						fullname = first_name
 					count = chat.get_members_count()
 					mention = mention_markdown(new_mem.id, first_name)
+					currentTime = datetime.datetime.now()
+					currentTime.hour
+					name = time
+					if currentTime.hour < 12:
+						print('\nGood morning', name)
+					elif 12 <= currentTime.hour < 18:
+						print('\nGood afternoon', name)
+					else:
+						print('\nGood evening', name)
 					if new_mem.username:
 						username = "@" + escape_markdown(new_mem.username)
 					else:
@@ -152,7 +162,7 @@ def new_member(bot: Bot, update: Update):
 						formatted_text = cust_welcome.format(first=escape_markdown(first_name),
 											  last=escape_markdown(new_mem.last_name or first_name),
 											  fullname=escape_markdown(fullname), username=username, mention=mention,
-											  count=count, chatname=escape_markdown(chat.title), id=new_mem.id)
+											  count=count, time=time, chatname=escape_markdown(chat.title), id=new_mem.id)
 					else:
 						formatted_text = ""
 					# Build keyboard
@@ -201,6 +211,15 @@ def new_member(bot: Bot, update: Update):
 							fullname = first_name
 						count = chat.get_members_count()
 						mention = mention_markdown(new_mem.id, first_name)
+						currentTime = datetime.datetime.now()
+						currentTime.hour
+						name = time
+						if currentTime.hour < 12:
+							print('\nGood morning', name)
+						elif 12 <= currentTime.hour < 18:
+							print('\nGood afternoon', name)
+						else:
+							print('\nGood evening', name)
 						if new_mem.username:
 							username = "@" + escape_markdown(new_mem.username)
 						else:
@@ -211,7 +230,7 @@ def new_member(bot: Bot, update: Update):
 							res = valid_format.format(first=escape_markdown(first_name),
 												  last=escape_markdown(new_mem.last_name or first_name),
 												  fullname=escape_markdown(fullname), username=username, mention=mention,
-												  count=count, chatname=escape_markdown(chat.title), id=new_mem.id)
+												  count=count, time=time, chatname=escape_markdown(chat.title), id=new_mem.id)
 						else:
 							res = ""
 						buttons = sql.get_welc_buttons(chat.id)
