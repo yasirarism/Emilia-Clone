@@ -7,12 +7,7 @@ __lang__ = "🇮🇩 Indonesia"
 id = {
 # main stuff
 	"start_text": """
-if currentTime.hour < 12:
-	print('\nSelamat Pagi')
-elif 12 <= currentTime.hour < 18:
-	print('\nSelamat Siang')
-else:
-	print('\nSelamat Sore') {}, namaku {}! Saya seorang manajer grup yang dikelola oleh master saya yang bernama [Yasir Aris M 🙎](tg://user?id={}).
+Hai {}, namaku {}! Saya seorang manajer grup yang dikelola oleh master saya yang bernama [Yasir Aris M 🙎](tg://user?id={}).
 Anda dapat bergabung dengan channel saya [YasiPedia Channel](https://t.me/YasirPediaChannel) atau [Ayra's Bot News](https://t.me/AyraBotNews)
 
 Ada masalah atau butuh bantuan lebih?
