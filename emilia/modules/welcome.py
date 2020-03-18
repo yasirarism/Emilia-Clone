@@ -145,14 +145,14 @@ def new_member(bot: Bot, update: Update):
 						fullname = first_name
 					count = chat.get_members_count()
 					mention = mention_markdown(new_mem.id, first_name)
-					currentTime = datetime.datetime.now()
-					currentTime.hour = time
-					if currentTime.hour < 12:
-						print('\nGood morning')
-					elif 12 <= currentTime.hour < 18:
-						print('\nGood afternoon')
+					now = datetime.datetime.now()
+					hour = now.hour
+					if hour < 12:
+					    waktu = "Good morning"
+					elif 12 <= hour < 18:
+					    waktu = "Good afternoon"
 					else:
-						print('\nGood evening')
+					    waktu = "Good night"
 					if new_mem.username:
 						username = "@" + escape_markdown(new_mem.username)
 					else:
@@ -161,7 +161,7 @@ def new_member(bot: Bot, update: Update):
 						formatted_text = cust_welcome.format(first=escape_markdown(first_name),
 											  last=escape_markdown(new_mem.last_name or first_name),
 											  fullname=escape_markdown(fullname), username=username, mention=mention,
-											  count=count, time=currentTime.hour, chatname=escape_markdown(chat.title), id=new_mem.id)
+											  count=count, time=waktu, chatname=escape_markdown(chat.title), id=new_mem.id)
 					else:
 						formatted_text = ""
 					# Build keyboard
@@ -211,13 +211,14 @@ def new_member(bot: Bot, update: Update):
 						count = chat.get_members_count()
 						mention = mention_markdown(new_mem.id, first_name)
 						currentTime = datetime.datetime.now()
-						currentTime.hour = time
-						if currentTime.hour < 12:
-							print('\nGood morning')
-						elif 12 <= currentTime.hour < 18:
-							print('\nGood afternoon')
+						now = datetime.datetime.now()
+						hour = now.hour
+						if hour < 12:
+						    waktu = "Good morning"
+						elif 12 <= hour < 18:
+						    waktu = "Good afternoon"
 						else:
-							print('\nGood evening')
+						    waktu = "Good night"
 						if new_mem.username:
 							username = "@" + escape_markdown(new_mem.username)
 						else:
@@ -228,7 +229,7 @@ def new_member(bot: Bot, update: Update):
 							res = valid_format.format(first=escape_markdown(first_name),
 												  last=escape_markdown(new_mem.last_name or first_name),
 												  fullname=escape_markdown(fullname), username=username, mention=mention,
-												  count=count, time=currentTime.hour, chatname=escape_markdown(chat.title), id=new_mem.id)
+												  count=count, time=waktu, chatname=escape_markdown(chat.title), id=new_mem.id)
 						else:
 							res = ""
 						buttons = sql.get_welc_buttons(chat.id)
@@ -352,14 +353,14 @@ def check_bot_button(bot: Bot, update: Update):
 		else:
 			fullname = first_name
 		count = chat.get_members_count()
-		currentTime = datetime.datetime.now()
-		currentTime.hour = time
-		if currentTime.hour < 12:
-			print('\nSelamat Pagi')
-		elif 12 <= currentTime.hour < 18:
-			print('\nSelamat Siang')
+		now = datetime.datetime.now()
+		hour = now.hour
+		if hour < 12:
+		    waktu = "Good morning"
+		elif 12 <= hour < 18:
+		    waktu = "Good afternoon"
 		else:
-			print('\nSelamat Sore')
+		    waktu = "Good night"
 		mention = mention_markdown(query.from_user.id, first_name)
 		if query.from_user.username:
 			username = "@" + escape_markdown(query.from_user.username)
@@ -368,7 +369,7 @@ def check_bot_button(bot: Bot, update: Update):
 		formatted_text = cust_welcome.format(first=escape_markdown(first_name),
 											 last=escape_markdown(query.from_user.last_name or first_name),
 											 fullname=escape_markdown(fullname), username=username, mention=mention,
-											 count=count, time=currentTime.hour chatname=escape_markdown(chat.title), id=query.from_user.id)
+											 count=count, time=waktu, chatname=escape_markdown(chat.title), id=query.from_user.id)
 		# Build keyboard
 		buttons = sql.get_welc_buttons(chat.id)
 		keyb = build_keyboard(buttons)
@@ -447,14 +448,14 @@ def left_member(bot: Bot, update: Update):
 				else:
 					fullname = first_name
 				count = chat.get_members_count()
-				currentTime = datetime.datetime.now()
-				currentTime.hour = time
-				if currentTime.hour < 12:
-					print('\nSelamat Pagi')
-				elif 12 <= currentTime.hour < 18:
-					print('\nSelamat Siang')
+				now = datetime.datetime.now()
+				hour = now.hour
+				if hour < 12:
+				    waktu = "Good morning"
+				elif 12 <= hour < 18:
+				    waktu = "Good afternoon"
 				else:
-					print('\nSelamat Sore')
+				    waktu = "Good night"
 				mention = mention_markdown(left_mem.id, first_name)
 				if left_mem.username:
 					username = "@" + escape_markdown(left_mem.username)
@@ -464,7 +465,7 @@ def left_member(bot: Bot, update: Update):
 					formatted_text = cust_goodbye.format(first=escape_markdown(first_name),
 											  last=escape_markdown(left_mem.last_name or first_name),
 											  fullname=escape_markdown(fullname), username=username, mention=mention,
-											  count=count, time=currentTime.hour, chatname=escape_markdown(chat.title), id=left_mem.id)
+											  count=count, time=waktu, chatname=escape_markdown(chat.title), id=left_mem.id)
 				else:
 					formatted_text = ""
 				# Build keyboard
@@ -485,14 +486,14 @@ def left_member(bot: Bot, update: Update):
 				else:
 					fullname = first_name
 				count = chat.get_members_count()
-				currentTime = datetime.datetime.now()
-				currentTime.hour = time
-				if currentTime.hour < 12:
-					print('\nSelamat Pagi')
-				elif 12 <= currentTime.hour < 18:
-					print('\nSelamat Siang')
+				now = datetime.datetime.now()
+				hour = now.hour
+				if hour < 12:
+				    waktu = "Good morning"
+				elif 12 <= hour < 18:
+				    waktu = "Good afternoon"
 				else:
-					print('\nSelamat Sore')
+				    waktu = "Good night"
 				mention = mention_markdown(left_mem.id, first_name)
 				if left_mem.username:
 					username = "@" + escape_markdown(left_mem.username)
@@ -504,7 +505,7 @@ def left_member(bot: Bot, update: Update):
 					res = valid_format.format(first=escape_markdown(first_name),
 										  last=escape_markdown(left_mem.last_name or first_name),
 										  fullname=escape_markdown(fullname), username=username, mention=mention,
-										  count=count, time=currentTime.hour, chatname=escape_markdown(chat.title), id=left_mem.id)
+										  count=count, time=waktu, chatname=escape_markdown(chat.title), id=left_mem.id)
 				else:
 					res = ""
 				buttons = sql.get_gdbye_buttons(chat.id)
