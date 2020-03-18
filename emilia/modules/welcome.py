@@ -147,12 +147,18 @@ def new_member(bot: Bot, update: Update):
 					mention = mention_markdown(new_mem.id, first_name)
 					now = datetime.datetime.now()
 					hour = now.hour
-					if hour < 12:
-					    waktu = "Good morning"
-					elif 12 <= hour < 18:
-					    waktu = "Good afternoon"
+					if hour < 4:
+					    waktu = "Selamat Dini Hari 🌚"
+					elif 4 <= hour < 12:
+					    waktu = "Selamat Pagi 🌤"
+					elif 12 <= hour < 15:
+					    waktu = "Selamat Siang ☀"
+					elif 15 <= hour < 17:
+					    waktu = "Selamat Sore ⛅"
+					elif 17 <= hour < 18:
+					    waktu = "Selamat Petang 🌥"
 					else:
-					    waktu = "Good night"
+					    waktu = "Selamat Malam 🌙"
 					if new_mem.username:
 						username = "@" + escape_markdown(new_mem.username)
 					else:
@@ -213,12 +219,18 @@ def new_member(bot: Bot, update: Update):
 						currentTime = datetime.datetime.now()
 						now = datetime.datetime.now()
 						hour = now.hour
-						if hour < 12:
-						    waktu = "Good morning"
-						elif 12 <= hour < 18:
-						    waktu = "Good afternoon"
+						if hour < 4:
+						    waktu = "Selamat Dini Hari 🌚"
+						elif 4 <= hour < 12:
+						    waktu = "Selamat Pagi 🌤"
+						elif 12 <= hour < 15:
+						    waktu = "Selamat Siang ☀"
+						elif 15 <= hour < 17:
+						    waktu = "Selamat Sore ⛅"
+						elif 17 <= hour < 18:
+						    waktu = "Selamat Petang 🌥"
 						else:
-						    waktu = "Good night"
+						    waktu = "Selamat Malam 🌙"
 						if new_mem.username:
 							username = "@" + escape_markdown(new_mem.username)
 						else:
@@ -355,12 +367,18 @@ def check_bot_button(bot: Bot, update: Update):
 		count = chat.get_members_count()
 		now = datetime.datetime.now()
 		hour = now.hour
-		if hour < 12:
-		    waktu = "Good morning"
-		elif 12 <= hour < 18:
-		    waktu = "Good afternoon"
+		if hour < 4:
+			waktu = "Selamat Dini Hari 🌚"
+		elif 4 <= hour < 12:
+			waktu = "Selamat Pagi 🌤"
+		elif 12 <= hour < 15:
+			waktu = "Selamat Siang ☀"
+		elif 15 <= hour < 17:
+			waktu = "Selamat Sore ⛅"
+		elif 17 <= hour < 18:
+			waktu = "Selamat Petang 🌥"
 		else:
-		    waktu = "Good night"
+			waktu = "Selamat Malam 🌙"
 		mention = mention_markdown(query.from_user.id, first_name)
 		if query.from_user.username:
 			username = "@" + escape_markdown(query.from_user.username)
@@ -450,12 +468,18 @@ def left_member(bot: Bot, update: Update):
 				count = chat.get_members_count()
 				now = datetime.datetime.now()
 				hour = now.hour
-				if hour < 12:
-				    waktu = "Good morning"
-				elif 12 <= hour < 18:
-				    waktu = "Good afternoon"
+				if hour < 4:
+					waktu = "Selamat Dini Hari 🌚"
+				elif 4 <= hour < 12:
+					waktu = "Selamat Pagi 🌤"
+				elif 12 <= hour < 15:
+					waktu = "Selamat Siang ☀"
+				elif 15 <= hour < 17:
+					waktu = "Selamat Sore ⛅"
+				elif 17 <= hour < 18:
+					waktu = "Selamat Petang 🌥"
 				else:
-				    waktu = "Good night"
+					waktu = "Selamat Malam 🌙"
 				mention = mention_markdown(left_mem.id, first_name)
 				if left_mem.username:
 					username = "@" + escape_markdown(left_mem.username)
@@ -488,12 +512,18 @@ def left_member(bot: Bot, update: Update):
 				count = chat.get_members_count()
 				now = datetime.datetime.now()
 				hour = now.hour
-				if hour < 12:
-				    waktu = "Good morning"
-				elif 12 <= hour < 18:
-				    waktu = "Good afternoon"
+				if hour < 4:
+					waktu = "Selamat Dini Hari 🌚"
+				elif 4 <= hour < 12:
+					waktu = "Selamat Pagi 🌤"
+				elif 12 <= hour < 15:
+					waktu = "Selamat Siang ☀"
+				elif 15 <= hour < 17:
+					waktu = "Selamat Sore ⛅"
+				elif 17 <= hour < 18:
+					waktu = "Selamat Petang 🌥"
 				else:
-				    waktu = "Good night"
+					waktu = "Selamat Malam 🌙"
 				mention = mention_markdown(left_mem.id, first_name)
 				if left_mem.username:
 					username = "@" + escape_markdown(left_mem.username)
