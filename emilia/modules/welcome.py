@@ -1,6 +1,7 @@
 import html, time
 import re
-import datetime
+from datetime import datetime
+from pytz import timezone
 import threading
 import requests
 from typing import Optional, List
@@ -145,17 +146,21 @@ def new_member(bot: Bot, update: Update):
 						fullname = first_name
 					count = chat.get_members_count()
 					mention = mention_markdown(new_mem.id, first_name)
-					now = datetime.datetime.now()
-					hour = now.hour
-					if hour < 4:
+					# Current time in UTC
+					now_utc = datetime.now(timezone('UTC'))
+
+					# Convert to Jakarta time zone
+					jakarta_timezone = now_utc.astimezone(timezone('Asia/Jakarta'))
+
+					if jakarta_timezone.hour < 4:
 					    waktu = "Selamat Dini Hari 🌚"
-					elif 4 <= hour < 12:
+					elif 4 <= jakarta_timezone.hour < 12:
 					    waktu = "Selamat Pagi 🌤"
-					elif 12 <= hour < 15:
+					elif 12 <= jakarta_timezone.hour < 15:
 					    waktu = "Selamat Siang ☀"
-					elif 15 <= hour < 17:
+					elif 15 <= jakarta_timezone.hour < 17:
 					    waktu = "Selamat Sore ⛅"
-					elif 17 <= hour < 18:
+					elif 17 <= jakarta_timezone.hour < 18:
 					    waktu = "Selamat Petang 🌥"
 					else:
 					    waktu = "Selamat Malam 🌙"
@@ -216,18 +221,21 @@ def new_member(bot: Bot, update: Update):
 							fullname = first_name
 						count = chat.get_members_count()
 						mention = mention_markdown(new_mem.id, first_name)
-						currentTime = datetime.datetime.now()
-						now = datetime.datetime.now()
-						hour = now.hour
-						if hour < 4:
+						# Current time in UTC
+						now_utc = datetime.now(timezone('UTC'))
+
+						# Convert to Europe/Berlin time zone
+						jakarta_timezone = now_utc.astimezone(timezone('Asia/Jakarta'))
+
+						if jakarta_timezone.hour < 4:
 						    waktu = "Selamat Dini Hari 🌚"
-						elif 4 <= hour < 12:
+						elif 4 <= jakarta_timezone.hour < 12:
 						    waktu = "Selamat Pagi 🌤"
-						elif 12 <= hour < 15:
+						elif 12 <= jakarta_timezone.hour < 15:
 						    waktu = "Selamat Siang ☀"
-						elif 15 <= hour < 17:
+						elif 15 <= jakarta_timezone.hour < 17:
 						    waktu = "Selamat Sore ⛅"
-						elif 17 <= hour < 18:
+						elif 17 <= jakarta_timezone.hour < 18:
 						    waktu = "Selamat Petang 🌥"
 						else:
 						    waktu = "Selamat Malam 🌙"
@@ -365,17 +373,21 @@ def check_bot_button(bot: Bot, update: Update):
 		else:
 			fullname = first_name
 		count = chat.get_members_count()
-		now = datetime.datetime.now()
-		hour = now.hour
-		if hour < 4:
+		# Current time in UTC
+		now_utc = datetime.now(timezone('UTC'))
+
+		# Convert to Europe/Berlin time zone
+		jakarta_timezone = now_utc.astimezone(timezone('Asia/Jakarta'))
+
+		if jakarta_timezone.hour < 4:
 			waktu = "Selamat Dini Hari 🌚"
-		elif 4 <= hour < 12:
+		elif 4 <= jakarta_timezone.hour < 12:
 			waktu = "Selamat Pagi 🌤"
-		elif 12 <= hour < 15:
+		elif 12 <= jakarta_timezone.hour < 15:
 			waktu = "Selamat Siang ☀"
-		elif 15 <= hour < 17:
+		elif 15 <= jakarta_timezone.hour < 17:
 			waktu = "Selamat Sore ⛅"
-		elif 17 <= hour < 18:
+		elif 17 <= jakarta_timezone.hour < 18:
 			waktu = "Selamat Petang 🌥"
 		else:
 			waktu = "Selamat Malam 🌙"
@@ -466,17 +478,21 @@ def left_member(bot: Bot, update: Update):
 				else:
 					fullname = first_name
 				count = chat.get_members_count()
-				now = datetime.datetime.now()
-				hour = now.hour
-				if hour < 4:
+				# Current time in UTC
+				now_utc = datetime.now(timezone('UTC'))
+
+				# Convert to Europe/Berlin time zone
+				jakarta_timezone = now_utc.astimezone(timezone('Asia/Jakarta'))
+
+				if jakarta_timezone.hour < 4:
 					waktu = "Selamat Dini Hari 🌚"
-				elif 4 <= hour < 12:
+				elif 4 <= jakarta_timezone.hour < 12:
 					waktu = "Selamat Pagi 🌤"
-				elif 12 <= hour < 15:
+				elif 12 <= jakarta_timezone.hour < 15:
 					waktu = "Selamat Siang ☀"
-				elif 15 <= hour < 17:
+				elif 15 <= jakarta_timezone.hour < 17:
 					waktu = "Selamat Sore ⛅"
-				elif 17 <= hour < 18:
+				elif 17 <= jakarta_timezone.hour < 18:
 					waktu = "Selamat Petang 🌥"
 				else:
 					waktu = "Selamat Malam 🌙"
@@ -510,17 +526,21 @@ def left_member(bot: Bot, update: Update):
 				else:
 					fullname = first_name
 				count = chat.get_members_count()
-				now = datetime.datetime.now()
-				hour = now.hour
-				if hour < 4:
+				# Current time in UTC
+				now_utc = datetime.now(timezone('UTC'))
+
+				# Convert to Europe/Berlin time zone
+				jakarta_timezone = now_utc.astimezone(timezone('Asia/Jakarta'))
+
+				if jakarta_timezone.hour < 4:
 					waktu = "Selamat Dini Hari 🌚"
-				elif 4 <= hour < 12:
+				elif 4 <= jakarta_timezone.hour < 12:
 					waktu = "Selamat Pagi 🌤"
-				elif 12 <= hour < 15:
+				elif 12 <= jakarta_timezone.hour < 15:
 					waktu = "Selamat Siang ☀"
-				elif 15 <= hour < 17:
+				elif 15 <= jakarta_timezone.hour < 17:
 					waktu = "Selamat Sore ⛅"
-				elif 17 <= hour < 18:
+				elif 17 <= jakarta_timezone.hour < 18:
 					waktu = "Selamat Petang 🌥"
 				else:
 					waktu = "Selamat Malam 🌙"
