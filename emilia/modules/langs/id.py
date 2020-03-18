@@ -1,7 +1,3 @@
-import datetime
-currentTime = datetime.datetime.now()
-currentTime.hour
-
 __lang__ = "🇮🇩 Indonesia"
 
 id = {
