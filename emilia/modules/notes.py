@@ -376,6 +376,8 @@ def private_note(bot: Bot, update: Update, args: List[str]):
 @run_async
 def list_notes(bot: Bot, update: Update):
 	chat_id = update.effective_chat.id
+	chat = update.effective_chat  # type: Optional[Chat]
+	user = update.effective_user  # type: Optional[User]
 	conn = connected(bot, update, chat, user.id, need_admin=False)
 	if conn:
 		chat_id = conn
