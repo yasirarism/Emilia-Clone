@@ -400,7 +400,7 @@ def list_notes(bot: Bot, update: Update):
 	if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
 		update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
 		msg = ""
-        msg += note_name
+	msg += note_name
 	if msg == tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name) or msg == tl(update.effective_message, "*Catatan lokal:*\n"):
 		if conn:
 			send_message(update.effective_message, tl(update.effective_message, "Tidak ada catatan di obrolan *{}*!").format(chat_name), parse_mode="markdown")
