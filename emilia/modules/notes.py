@@ -407,7 +407,24 @@ def list_notes(bot: Bot, update: Update):
 		else:
 			send_message(update.effective_message, tl(update.effective_message, "Tidak ada catatan di obrolan ini!"))
 	elif len(msg) != 0:
-		update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+		msg += tl(update.effective_message, "\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, atau `#notename`")
+		try:
+			send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
+		except BadRequest:
+			if chat.type == "private":
+				chat_name = ""
+				msg = tl(update.effective_message, "<b>Catatan lokal:</b>\n")
+			else:
+				chat_name = chat.title
+				msg = tl(update.effective_message, "<b>Catatan di {}:</b>\n").format(chat_name)
+			for note in note_list:
+				note_name = " - <code>{}</code>\n".format(note.name)
+				if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
+					send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
+					msg = ""
+				msg += note_name
+			msg += tl(update.effective_message, "\nAnda dapat mengambil catatan ini dengan menggunakan <code>/get notename</code>, atau <code>#notename</code>")
+			send_message(update.effective_message, msg, parse_mode=ParseMode.HTML)
 
 
 def __import_data__(chat_id, data):
