@@ -398,9 +398,8 @@ def list_notes(bot: Bot, update: Update):
 
 	for note in note_list:
 		notes = len(note_list) + 1
-		msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
 		for note_id, note in zip(range(1, notes), note_list):
-			if note_id > 10:
+			if note_id < 10:
 				note_name = f"`{note_id:2}.`  `#{note.name}`\n".format(note.name)
 			else:
 				note_name = f"`{note_id}.`  `#{note.name}`\n".format(note.name)
