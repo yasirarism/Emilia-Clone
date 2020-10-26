@@ -185,7 +185,7 @@ def hash_get(bot: Bot, update: Update):
 	spam = spamfilters(update.effective_message.text, update.effective_message.from_user.id, update.effective_chat.id, update.effective_message)
 	if spam == True:
 		return
-	message = ("Get apa?", update.effective_message.text)
+	message = update.effective_message.text
 	fst_word = message.split()[0]
 	no_hash = fst_word[1:]
 	get(bot, update, no_hash, show_none=False)
