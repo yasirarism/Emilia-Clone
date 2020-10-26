@@ -375,41 +375,26 @@ def private_note(bot: Bot, update: Update, args: List[str]):
 
 @run_async
 def list_notes(bot: Bot, update: Update):
-	chat_id = update.effective_chat.id
-	chat = update.effective_chat  # type: Optional[Chat]
-	user = update.effective_user  # type: Optional[User]
-	conn = connected(bot, update, chat, user.id, need_admin=False)
-	if conn:
-		chat_id = conn
-		chat_name = dispatcher.bot.getChat(conn).title
-		msg = tl(update.effective_message, "*📝 Catatan di {}:*\n").format(chat_name)
-	else:
-		chat_id = update.effective_chat.id
-		if chat.type == "private":
-			chat_name = ""
-			msg = tl(update.effective_message, "*Catatan lokal:*\n")
-		else:
-			chat_name = chat.title
-			msg = tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name)
-	note_list = sql.get_all_chat_notes(chat_id)
-	notes = len(note_list) + 1
-	msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
-	for note_id, note in zip(range(1, notes), note_list):
-		if note_id < 10:
-			note_name = f"`{note_id:2}.`  `#{(note.name.lower())}`\n"
-		else:
-			note_name = f"`{note_id}.`  `#{(note.name.lower())}`\n"
-	if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
-		update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
-		msg = ""
-	msg += note_name
-	if msg == tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name) or msg == tl(update.effective_message, "*Catatan lokal:*\n"):
-		if conn:
-			send_message(update.effective_message, tl(update.effective_message, "Tidak ada catatan di obrolan *{}*!").format(chat_name), parse_mode="markdown")
-		else:
-			send_message(update.effective_message, tl(update.effective_message, "Tidak ada catatan di obrolan ini!"))
-	elif len(msg) != 0:
-		update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+    chat_id = update.effective_chat.id
+    note_list = sql.get_all_chat_notes(chat_id)
+    notes = len(note_list) + 1
+    msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
+    for note_id, note in zip(range(1, notes), note_list):
+        if note_id < 10:
+            note_name = f"`{note_id:2}.`  `#{(note.name.lower())}`\n"
+        else:
+            note_name = f"`{note_id}.`  `#{(note.name.lower())}`\n"
+        if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
+            update.effective_message.reply_text(
+                msg, parse_mode=ParseMode.MARKDOWN)
+            msg = ""
+        msg += note_name
+
+    if not note_list:
+        update.effective_message.reply_text("No notes in this chat!")
+
+    elif len(msg) != 0:
+        update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
 
 def __import_data__(chat_id, data):
 	failures = []
