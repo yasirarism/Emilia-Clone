@@ -199,7 +199,7 @@ def slash_get(bot: Bot, update: Update):
     try:
         noteid = note_list[int(no_slash) - 1]
         note_name = str(noteid).strip(">").split()[1]
-        get(update, context, note_name, show_none=False)
+        get(bot, update, note_name, show_none=False)
     except IndexError:
         update.effective_message.reply_text("Note ID salah 😾")
 
