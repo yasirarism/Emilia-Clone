@@ -375,8 +375,8 @@ def private_note(bot: Bot, update: Update, args: List[str]):
 
 @run_async
 def list_notes(bot: Bot, update: Update):
-    chat_id = update.effective_chat.id
-    conn = connected(bot, update, chat, user.id, need_admin=False)
+	chat_id = update.effective_chat.id
+	conn = connected(bot, update, chat, user.id, need_admin=False)
 	if conn:
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
@@ -389,10 +389,10 @@ def list_notes(bot: Bot, update: Update):
 		else:
 			chat_name = chat.title
 			msg = tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name)
-    note_list = sql.get_all_chat_notes(chat_id)
-    notes = len(note_list) + 1
-    msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
-    for note_id, note in zip(range(1, notes), note_list):
+	note_list = sql.get_all_chat_notes(chat_id)
+	notes = len(note_list) + 1
+	msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
+	for note_id, note in zip(range(1, notes), note_list):
         if note_id < 10:
             note_name = f"`{note_id:2}.`  `#{(note.name.lower())}`\n"
         else:
