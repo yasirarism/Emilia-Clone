@@ -395,9 +395,9 @@ def list_notes(bot: Bot, update: Update):
 			msg = tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name)
 
 	note_list = sql.get_all_chat_notes(chat_id)
+	notes = len(note_list) + 1
 
 	for note in note_list:
-		notes = len(note_list) + 1
 		for note_id, note in zip(range(1, notes), note_list):
 			if note_id < 10:
 				note_name = f"`{note_id:2}.`  `#{(note.name.lower())}`\n"
