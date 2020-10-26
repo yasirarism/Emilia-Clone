@@ -380,17 +380,17 @@ def list_notes(bot: Bot, update: Update):
     user = update.effective_user  # type: Optional[User]
     conn = connected(bot, update, chat, user.id, need_admin=False)
     if conn:
-	chat_id = conn
-	chat_name = dispatcher.bot.getChat(conn).title
-	msg = tl(update.effective_message, "*📝 Catatan di {}:*\n").format(chat_name)
+        chat_id = conn
+        chat_name = dispatcher.bot.getChat(conn).title
+        msg = tl(update.effective_message, "*📝 Catatan di {}:*\n").format(chat_name)
     else:
-	chat_id = update.effective_chat.id
-	if chat.type == "private":
-		chat_name = ""
-		msg = tl(update.effective_message, "*Catatan lokal:*\n")
-	else:
-		chat_name = chat.title
-		msg = tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name)
+        chat_id = update.effective_chat.id
+        if chat.type == "private":
+            chat_name = ""
+            msg = tl(update.effective_message, "*Catatan lokal:*\n")
+        else:
+            chat_name = chat.title
+            msg = tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name)
     note_list = sql.get_all_chat_notes(chat_id)
     notes = len(note_list) + 1
     msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
