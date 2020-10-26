@@ -407,7 +407,7 @@ def list_notes(bot: Bot, update: Update):
 		else:
 			send_message(update.effective_message, tl(update.effective_message, "Tidak ada catatan di obrolan ini!"))
 	elif len(msg) != 0:
-	update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+		update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
 
 
 def __import_data__(chat_id, data):
