@@ -394,7 +394,7 @@ def list_notes(bot: Bot, update: Update):
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
-        msg = tl(update.effective_message, "*📝 Catatan di {}:*\n\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, /notenumber atau #notename \n\n  *ID*    *Note* \n").format(chat_name)
+        msg = tl(update.effective_message, "*📝 Catatan di {}:*\n\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, `/notenumber` atau `#notename` \n\n  *ID*    *Note* \n").format(chat_name)
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
@@ -402,7 +402,7 @@ def list_notes(bot: Bot, update: Update):
             msg = tl(update.effective_message, "*📝 Catatan lokal:*\n\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, `/notenumber` atau `#notename` \n\n  *ID*    *Note* \n")
         else:
             chat_name = chat.title
-            msg = tl(update.effective_message, "*📝 Catatan di {}:*\n\nnAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, `/notenumber` atau `#notename` \n\n  *ID*    *Note* \n").format(chat_name)
+            msg = tl(update.effective_message, "*📝 Catatan di {}:*\n\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, `/notenumber` atau `#notename` \n\n  *ID*    *Note* \n").format(chat_name)
     note_list = sql.get_all_chat_notes(chat_id)
     notes = len(note_list) + 1
     for note_id, note in zip(range(1, notes), note_list):
