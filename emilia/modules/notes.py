@@ -412,23 +412,6 @@ def list_notes(bot: Bot, update: Update):
 		msg += tl(update.effective_message, "\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, atau `#notename`")
 		try:
 			send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
-		except BadRequest:
-			if chat.type == "private":
-				chat_name = ""
-				msg = tl(update.effective_message, "<b>Catatan lokal:</b>\n")
-			else:
-				note_list = sql.get_all_chat_notes(chat_id)
-				notes = len(note_list) + 1
-				msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
-				for note_id, note in zip(range(1, notes), note_list):
-					if note_id < 10:
-						note_name = f"`{note_id:2}.`  `#{(note.name.lower())}`\n"
-					else:
-						note_name = f"`{note_id}.`  `#{(note.name.lower())}`\n"
-				if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
-					update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
-					msg = ""
-				msg += note_name
 
 
 def __import_data__(chat_id, data):
