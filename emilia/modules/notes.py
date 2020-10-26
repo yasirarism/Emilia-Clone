@@ -405,7 +405,7 @@ def list_notes(bot: Bot, update: Update):
 			#else:
 			#	note_name = "{note_id}.  `{}`\n".format(note.name)
 		for note_id, note in zip(range(1, notes), note_list):
-		note_name = " {note_id} `{}`\n".format(note.name)
+			note_name = " {note_id} `{}`\n".format(note.name)
 		if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
 			send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
 			msg = ""
