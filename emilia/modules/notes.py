@@ -382,18 +382,18 @@ def list_notes(bot: Bot, update: Update):
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
-        msg = tl(update.effective_message, "*📝 Catatan di {}:*\n").format(chat_name)
+        msg = tl(update.effective_message, "*📝 Catatan di {}:*\nGet note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n").format(chat_name)
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
             chat_name = ""
-            msg = tl(update.effective_message, "*Catatan lokal:*\n")
+            msg = tl(update.effective_message, "*Catatan lokal:*\nGet note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n")
         else:
             chat_name = chat.title
-            msg = tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name)
+            msg = tl(update.effective_message, "*Catatan di {}:*\nGet note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n").format(chat_name)
     note_list = sql.get_all_chat_notes(chat_id)
     notes = len(note_list) + 1
-    msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
+    # msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
     for note_id, note in zip(range(1, notes), note_list):
         if note_id < 10:
             note_name = f"`{note_id:2}.`  `#{(note.name.lower())}`\n"
