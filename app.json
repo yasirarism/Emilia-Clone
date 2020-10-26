@@ -62,6 +62,10 @@
       "description": "Whether to allow using exclamation marks ! for commands as well as /.",
       "value": "True"
     },
+    "DATABASE_URL": {
+      "description": "Fill with database postgress SQL",
+      "value": "True"
+    },
     "BAN_STICKER": {
       "description": "Which sticker to use when banning people. Use https://telegram.dog/ShowJsonBot to get the file_id",
       "value": "CAADBQADKwADttzjKMDa_NPYQVImFgQ"
@@ -70,13 +74,5 @@
     "description": "Isi api openweather",
     "value": ""
     }
-  },
-  "addons": [
-    {
-      "plan": "heroku-postgresql",
-      "options": {
-        "version": "12"
-      }
-    }
-  ]
+  }
 }
