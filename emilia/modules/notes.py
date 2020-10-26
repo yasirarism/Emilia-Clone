@@ -409,10 +409,7 @@ def list_notes(bot: Bot, update: Update):
 		else:
 			send_message(update.effective_message, tl(update.effective_message, "Tidak ada catatan di obrolan ini!"))
 	elif len(msg) != 0:
-		msg += tl(update.effective_message, "\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, atau `#notename`")
-		try:
-			send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
-
+		update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
 
 def __import_data__(chat_id, data):
 	failures = []
