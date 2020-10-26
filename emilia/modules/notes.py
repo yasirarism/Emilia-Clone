@@ -185,7 +185,7 @@ def hash_get(bot: Bot, update: Update):
 	spam = spamfilters(update.effective_message.text, update.effective_message.from_user.id, update.effective_chat.id, update.effective_message)
 	if spam == True:
 		return
-	message = update.effective_message.text
+	message = ("Get apa?", update.effective_message.text)
 	fst_word = message.split()[0]
 	no_hash = fst_word[1:]
 	get(bot, update, no_hash, show_none=False)
@@ -389,22 +389,22 @@ def list_notes(bot: Bot, update: Update):
 		chat_id = update.effective_chat.id
 		if chat.type == "private":
 			chat_name = ""
-			msg = tl(update.effective_message, "*Catatan lokal:*\n")
+ 			msg = tl(update.effective_message, "*📝 Catatan lokal:*\n")
 		else:
 			chat_name = chat.title
-			msg = tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name)
+ 			msg = tl(update.effective_message, "*📝 Catatan di {}:*\n").format(chat_name)
 
 	note_list = sql.get_all_chat_notes(chat_id)
 	chat_id = update.effective_chat.id
 	notes = len(note_list) + 1
 
 	for note in note_list:
-		for note_id, note in zip(range(1, notes), note_list):
+		#for note_id, note in zip(range(1, notes), note_list):
 			#if note_id < 10:
 			#	note_name = f"{note_id:2}.  `#{(note.name.lower())}`\n"
 			#else:
-			note_name = f"{note_id}.  `#{(note.name.lower())}`\n"
-		#note_name = " {note_id} `{}`\n".format(note.name)
+			#	note_name = f"{note_id}.  `#{(note.name.lower())}`\n"
+		note_name = " 📍 `#{}`\n".format(note.name)
 		if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
 			send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
 			msg = ""
