@@ -190,6 +190,18 @@ def hash_get(bot: Bot, update: Update):
 	no_hash = fst_word[1:]
 	get(bot, update, no_hash, show_none=False)
 
+@run_async
+def slash_get(bot: Bot, update: Update):
+    message, chat_id = update.effective_message.text, update.effective_chat.id
+    no_slash = message[1:]
+    note_list = sql.get_all_chat_notes(chat_id)
+
+    try:
+        noteid = note_list[int(no_slash) - 1]
+        note_name = str(noteid).strip(">").split()[1]
+        get(update, context, note_name, show_none=False)
+    except IndexError:
+        update.effective_message.reply_text("Note ID salah 😾")
 
 # TODO: FIX THIS
 @run_async
@@ -382,18 +394,17 @@ def list_notes(bot: Bot, update: Update):
     if conn:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
-        msg = tl(update.effective_message, "*📝 Catatan di {}:*\nGet note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n").format(chat_name)
+        msg = tl(update.effective_message, "*📝 Catatan di {}:*\n\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, /notenumber atau #notename \n\n  *ID*    *Note* \n").format(chat_name)
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
             chat_name = ""
-            msg = tl(update.effective_message, "*Catatan lokal:*\nGet note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n")
+            msg = tl(update.effective_message, "*📝 Catatan lokal:*\n\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, `/notenumber` atau `#notename` \n\n  *ID*    *Note* \n")
         else:
             chat_name = chat.title
-            msg = tl(update.effective_message, "*Catatan di {}:*\nGet note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n").format(chat_name)
+            msg = tl(update.effective_message, "*📝 Catatan di {}:*\n\nnAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, `/notenumber` atau `#notename` \n\n  *ID*    *Note* \n").format(chat_name)
     note_list = sql.get_all_chat_notes(chat_id)
     notes = len(note_list) + 1
-    # msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
     for note_id, note in zip(range(1, notes), note_list):
         if note_id < 10:
             note_name = f"`{note_id:2}.`  `#{(note.name.lower())}`\n"
@@ -513,13 +524,14 @@ __mod_name__ = "Notes"
 
 GET_HANDLER = CommandHandler("get", cmd_get, pass_args=True)
 HASH_GET_HANDLER = RegexHandler(r"^#[^\s]+", hash_get)
+SLASH_GET_HANDLER = RegexHandler(r"^/\d+$", slash_get)
 
-SAVE_HANDLER = CommandHandler("save", save)
+SAVE_HANDLER = CommandHandler("save", "tag", save)
 DELETE_HANDLER = CommandHandler("clear", clear, pass_args=True)
 
 PMNOTE_HANDLER = CommandHandler("privatenote", private_note, pass_args=True)
 
-LIST_HANDLER = DisableAbleCommandHandler(["notes", "saved"], list_notes, admin_ok=True)
+LIST_HANDLER = DisableAbleCommandHandler(["notes", "saved", "tags"], list_notes, admin_ok=True)
 
 dispatcher.add_handler(GET_HANDLER)
 dispatcher.add_handler(SAVE_HANDLER)
@@ -527,3 +539,4 @@ dispatcher.add_handler(LIST_HANDLER)
 dispatcher.add_handler(DELETE_HANDLER)
 dispatcher.add_handler(PMNOTE_HANDLER)
 dispatcher.add_handler(HASH_GET_HANDLER)
+dispatcher.add_handler(SLASH_GET_HANDLER)
