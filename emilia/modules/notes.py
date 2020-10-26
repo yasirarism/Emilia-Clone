@@ -526,7 +526,7 @@ GET_HANDLER = CommandHandler("get", cmd_get, pass_args=True)
 HASH_GET_HANDLER = RegexHandler(r"^#[^\s]+", hash_get)
 SLASH_GET_HANDLER = RegexHandler(r"^/\d+$", slash_get)
 
-SAVE_HANDLER = CommandHandler("save", "tag", save)
+SAVE_HANDLER = CommandHandler("save", save)
 DELETE_HANDLER = CommandHandler("clear", clear, pass_args=True)
 
 PMNOTE_HANDLER = CommandHandler("privatenote", private_note, pass_args=True)
