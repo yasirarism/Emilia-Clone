@@ -395,6 +395,7 @@ def list_notes(bot: Bot, update: Update):
 			msg = tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name)
 
 	note_list = sql.get_all_chat_notes(chat_id)
+	chat_id = update.effective_chat.id
 	notes = len(note_list) + 1
 
 	for note in note_list:
@@ -403,7 +404,8 @@ def list_notes(bot: Bot, update: Update):
 			#	note_name = "{note_id:2}.  `{}`\n".format(note.name)
 			#else:
 			#	note_name = "{note_id}.  `{}`\n".format(note.name)
-		note_name = " - `{}`\n".format(note.name)
+		for note_id, note in zip(range(1, notes), note_list):
+		note_name = " {note_id} `{}`\n".format(note.name)
 		if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
 			send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
 			msg = ""
