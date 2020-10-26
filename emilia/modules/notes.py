@@ -398,7 +398,7 @@ def list_notes(bot: Bot, update: Update):
 	notes = len(note_list) + 1
 
 	for note in note_list:
-		for note_id, note in zip(range(1, notes), note_list):
+		#for note_id, note in zip(range(1, notes), note_list):
 			#if note_id < 10:
 			#	note_name = "{note_id:2}.  `{}`\n".format(note.name)
 			#else:
