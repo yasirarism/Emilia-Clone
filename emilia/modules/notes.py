@@ -375,66 +375,26 @@ def private_note(bot: Bot, update: Update, args: List[str]):
 
 @run_async
 def list_notes(bot: Bot, update: Update):
-	spam = spamfilters(update.effective_message.text, update.effective_message.from_user.id, update.effective_chat.id, update.effective_message)
-	if spam == True:
-		return
-	chat = update.effective_chat  # type: Optional[Chat]
-	user = update.effective_user  # type: Optional[User]
-	conn = connected(bot, update, chat, user.id, need_admin=False)
-	if conn:
-		chat_id = conn
-		chat_name = dispatcher.bot.getChat(conn).title
-		msg = tl(update.effective_message, "*📝 Catatan di {}:*\n").format(chat_name)
-	else:
-		chat_id = update.effective_chat.id
-		if chat.type == "private":
-			chat_name = ""
-			msg = tl(update.effective_message, "*Catatan lokal:*\n")
-		else:
-			chat_name = chat.title
-			msg = tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name)
+    chat_id = update.effective_chat.id
+    note_list = sql.get_all_chat_notes(chat_id)
+    notes = len(note_list) + 1
+    msg = "Get note by `/notenumber` or `#notename` \n\n  *ID*    *Note* \n"
+    for note_id, note in zip(range(1, notes), note_list):
+        if note_id < 10:
+            note_name = f"`{note_id:2}.`  `#{(note.name.lower())}`\n"
+        else:
+            note_name = f"`{note_id}.`  `#{(note.name.lower())}`\n"
+        if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
+            update.effective_message.reply_text(
+                msg, parse_mode=ParseMode.MARKDOWN)
+            msg = ""
+        msg += note_name
 
-	note_list = sql.get_all_chat_notes(chat_id)
-	chat_id = update.effective_chat.id
-	notes = len(note_list) + 1
+    if not note_list:
+        update.effective_message.reply_text("No notes in this chat!")
 
-	for note in note_list:
-		#for note_id, note in zip(range(1, notes), note_list):
-			#if note_id < 10:
-			#	note_name = f"{note_id:2}.  `#{(note.name.lower())}`\n"
-			#else:
-			#	note_name = f"{note_id}.  `#{(note.name.lower())}`\n"
-		note_name = " 📍 `#{}`\n".format(note.name)
-		if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
-			send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
-			msg = ""
-		msg += note_name
-
-	if msg == tl(update.effective_message, "*Catatan di {}:*\n").format(chat_name) or msg == tl(update.effective_message, "*Catatan lokal:*\n"):
-		if conn:
-			send_message(update.effective_message, tl(update.effective_message, "Tidak ada catatan di obrolan *{}*!").format(chat_name), parse_mode="markdown")
-		else:
-			send_message(update.effective_message, tl(update.effective_message, "Tidak ada catatan di obrolan ini!"))
-
-	elif len(msg) != 0:
-		msg += tl(update.effective_message, "\nAnda dapat mengambil catatan ini dengan menggunakan `/get notename`, atau `#notename`")
-		try:
-			send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
-		except BadRequest:
-			if chat.type == "private":
-				chat_name = ""
-				msg = tl(update.effective_message, "<b>Catatan lokal:</b>\n")
-			else:
-				chat_name = chat.title
-				msg = tl(update.effective_message, "<b>Catatan di {}:</b>\n").format(chat_name)
-			for note in note_list:
-				note_name = " - <code>{}</code>\n".format(note.name)
-				if len(msg) + len(note_name) > MAX_MESSAGE_LENGTH:
-					send_message(update.effective_message, msg, parse_mode=ParseMode.MARKDOWN)
-					msg = ""
-				msg += note_name
-			msg += tl(update.effective_message, "\nAnda dapat mengambil catatan ini dengan menggunakan <code>/get notename</code>, atau <code>#notename</code>")
-			send_message(update.effective_message, msg, parse_mode=ParseMode.HTML)
+    elif len(msg) != 0:
+        update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
 
 
 def __import_data__(chat_id, data):
