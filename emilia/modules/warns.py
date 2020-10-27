@@ -75,7 +75,7 @@ def warn(user: User, chat: Chat, reason: str, message: Message, warner: User = N
 
     else:
         keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton(tl(chat.id, "🔘 Hapus peringatan"), callback_data="rm_warn({})".format(user.id)), InlineKeyboardButton(tl(chat.id, "Peraturan"), url="t.me/{}?start={}".format(dispatcher.bot.username, chat.id))]])
+            [[InlineKeyboardButton(tl(chat.id, "🔘 Hapus peringatan"), callback_data="rm_warn({})".format(user.id)), InlineKeyboardButton(tl(chat.id, "📌 Peraturan"), url="t.me/{}?start={}".format(dispatcher.bot.username, chat.id))]])
 
         if num_warns+1 == limit:
             if not warn_mode:
@@ -86,11 +86,11 @@ def warn(user: User, chat: Chat, reason: str, message: Message, warner: User = N
                 action_mode = tl(chat.id, "blokir")
             elif warn_mode == 3:
                 action_mode = tl(chat.id, "bisukan")
-            reply = tl(chat.id, "❗️ <b>Warn Event</b>\n • <b>Pengguna:</b> {}\n • <b>Total:</b> {}/{} peringatan... Jika anda di peringati lagi maka kamu akan di {}!").format(mention_html(user.id, user.first_name), num_warns, limit, action_mode)
+            reply = tl(chat.id, "❗️ <b>Warn Event</b>\n   • <b>Pengguna:</b> {}\n   • <b>Total:</b> {}/{} peringatan... Jika anda di peringati lagi maka kamu akan di {}!").format(mention_html(user.id, user.first_name), num_warns, limit, action_mode)
         else:
-            reply = tl(chat.id, "❗️ <b>Warn Event</b>\n • <b>Pengguna:</b> {}\n• <b>Total:</b> {}/{} peringatan... Hati-hati!").format(mention_html(user.id, user.first_name), num_warns, limit)
+            reply = tl(chat.id, "❗️ <b>Warn Event</b>\n   • <b>Pengguna:</b> {}\n   • <b>Total:</b> {}/{} peringatan... Hati-hati!").format(mention_html(user.id, user.first_name), num_warns, limit)
         if reason:
-            reply += tl(chat.id, "\n<b>Alasan pada peringatan terakhir:</b>\n{}").format(html.escape(reason))
+            reply += tl(chat.id, "\n   • <b>Alasan pada peringatan terakhir:</b>\n{}").format(html.escape(reason))
 
         log_reason = "<b>{}:</b>" \
                      "\n#WARN" \
