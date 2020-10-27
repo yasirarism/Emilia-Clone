@@ -8,7 +8,7 @@ from telegram.ext import run_async, CommandHandler, MessageHandler, Filters, Cal
 from telegram.utils.helpers import mention_html, escape_markdown
 
 import emilia.modules.sql.global_bans_sql as sql
-from emilia import dispatcher, OWNER_ID, SUDO_USERS, SUPPORT_USERS, STRICT_GBAN, spamfilters
+from emilia import dispatcher, OWNER_ID, SUDO_USERS, SUPPORT_USERS, STRICT_GBAN, spam_watch, spamfilters
 from emilia.modules.helper_funcs.chat_status import user_admin, is_user_admin
 from emilia.modules.helper_funcs.extraction import extract_user, extract_user_and_text
 from emilia.modules.helper_funcs.filters import CustomFilters
@@ -208,6 +208,19 @@ def gbanlist(bot: Bot, update: Update):
 
 
 def check_and_ban(update, user_id, should_message=True):
+    chat = update.effective_chat
+    message = update.effective_message
+    try:
+        if spam_watch is not None:
+            spam_watch_ban = spam_watch.get_ban(user_id)
+            if spam_watch_ban:
+                chat.kick_member(user_id)
+                if should_message:
+                    message.reply_markdown(
+                        "**Pengguna ini terdeteksi sebagai spambot oleh SpamWatch dan telah dikeluarkan!**\n\nKunjungi @SpamWatchSupport untuk membebaskan anda dari masalah ini!")
+                return
+    except Exception as e:
+        print(e)
     if sql.is_user_gbanned(user_id):
         update.effective_chat.kick_member(user_id)
         if should_message:
