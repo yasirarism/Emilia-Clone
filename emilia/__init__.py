@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import time
+import spamwatch
 from datetime import datetime
 
 import telegram.ext as tg
@@ -74,6 +75,7 @@ if ENV:
 	API_ACCUWEATHER = os.environ.get('API_ACCUWEATHER', None)
 	MAPS_API = os.environ.get('MAPS_API', None)
 	TEMPORARY_DATA = os.environ.get('TEMPORARY_DATA', None)
+	SW_API = os.environ.get('SW_API', None)
 
 else:
 	from emilia.config import Development as Config
@@ -124,6 +126,7 @@ else:
 	API_ACCUWEATHER = Config.API_ACCUWEATHER
 	MAPS_API = Config.MAPS_API
 	TEMPORARY_DATA = Config.TEMPORARY_DATA
+	SW_API = Config.SW_API
 
 
 SUDO_USERS.add(OWNER_ID)
@@ -137,6 +140,16 @@ SUDO_USERS = list(SUDO_USERS)
 WHITELIST_USERS = list(WHITELIST_USERS)
 SUPPORT_USERS = list(SUPPORT_USERS)
 SPAMMERS = list(SPAMMERS)
+
+# SpamWatch
+if SW_API == "None":
+    spam_watch = None
+    LOGGER.warning("SpamWatch API key is missing! Check your config var")
+else:
+    try:
+        spam_watch = spamwatch.Client(SW_API)
+    except Exception:
+        spam_watch = None
 
 # Load at end to ensure all prev variables have been set
 from emilia.modules.helper_funcs.handlers import CustomCommandHandler, CustomRegexHandler
