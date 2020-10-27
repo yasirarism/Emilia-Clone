@@ -1,7 +1,5 @@
 from . import dispatcher
-
-try:
-	from emilia.config import Development as Config
+from emilia.config import Development as Config
 
 Owner = Config.OWNER_ID
 NoResUser = [Config.OWNER_ID]
