@@ -17,3 +17,4 @@ requests
 tzwhere
 spamwatch
 telethon
+fontTools
