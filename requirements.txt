@@ -14,5 +14,5 @@ alphabet_detector
 urbandict
 pytz
 requests
-pytz
 tzwhere
+spamwatch
