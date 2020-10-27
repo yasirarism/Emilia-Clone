@@ -17,7 +17,8 @@ from emilia.lyn import lyndabot
 COLORS = [
     "#F07975", "#F49F69", "#F9C84A", "#8CC56E", "#6CC7DC", "#80C1FA", "#BCB3F9", "#E181AC"]
 
-async def process(msg, user, client, reply, replied=None):
+@run_async
+def process(msg, user, client, reply, replied=None):
         if not os.path.isdir("resources"):
             os.mkdir("resources", 0o755)
             urllib.request.urlretrieve(
@@ -259,7 +260,8 @@ async def process(msg, user, client, reply, replied=None):
             x = pfpbg.width + 30
         return True, canvas
 
-async def drawer(width, height):
+@run_async
+def drawer(width, height):
         # Top part
         top = Image.new('RGBA', (width, 20), (0,0,0,0))
         draw = ImageDraw.Draw(top)
@@ -275,13 +277,15 @@ async def drawer(width, height):
 
         return top, middle, bottom
 
-async def fontTest(letter):
+@run_async
+def fontTest(letter):
         test = TTFont("resources/Roboto-Medium.ttf")
         for table in test['cmap'].tables:
             if ord(letter) in table.cmap.keys():
                 return True
 
-async def get_entity(msg):
+@run_async
+def get_entity(msg):
         bold = {0: 0}
         italic = {0: 0}
         mono = {0: 0}
@@ -303,7 +307,8 @@ async def get_entity(msg):
                 link[entity.offset] = entity.offset + entity.length
         return bold, mono, italic, link
 
-async def doctype(name, size, type, canvas):
+@run_async
+def doctype(name, size, type, canvas):
         font = ImageFont.truetype("resources/Roboto-Medium.ttf", 38)
         doc = Image.new("RGBA", (130, 130), (29, 29, 29, 255))
         draw = ImageDraw.Draw(doc)
@@ -319,7 +324,8 @@ async def doctype(name, size, type, canvas):
             + type , font=font, fill="#AAAAAA")
         return canvas
 
-async def no_photo(reply, tot):
+@run_async
+def no_photo(reply, tot):
         pfp = Image.new("RGBA", (105, 105), (0, 0, 0, 0))
         pen = ImageDraw.Draw(pfp)
         color = random.choice(COLORS)
@@ -329,7 +335,8 @@ async def no_photo(reply, tot):
         pen.text((32, 17), letter, font=font, fill="white")
         return pfp, color
 
-async def emoji_fetch(emoji):
+@run_async
+def emoji_fetch(emoji):
         emojis = json.loads(
             urllib.request.urlopen("https://github.com/erenmetesar/modules-repo/raw/master/emojis.txt").read().decode())
         if emoji in emojis:
@@ -339,7 +346,8 @@ async def emoji_fetch(emoji):
             img = emojis["⛔"]
             return await transparent(urllib.request.urlretrieve(img, "resources/emoji.png")[0])
         
-async def transparent(emoji):
+@run_async
+def transparent(emoji):
         emoji = Image.open(emoji).convert("RGBA")
         emoji.thumbnail((40, 40))
         
@@ -349,7 +357,8 @@ async def transparent(emoji):
         draw.ellipse((0, 0, 40, 40), fill=255)
         return emoji, mask
 
-async def replied_user(draw, tot, text, maxlength, title):
+@run_async
+def replied_user(draw, tot, text, maxlength, title):
         namefont = ImageFont.truetype("resources/Roboto-Medium.ttf", 38)
         namefallback= ImageFont.truetype("resources/Quivira.otf", 38)
         textfont = ImageFont.truetype("resources/Roboto-Regular.ttf", 32)
@@ -374,8 +383,8 @@ async def replied_user(draw, tot, text, maxlength, title):
                 draw.text((180 + space, 132), letter, font=textfont, fill="white")
                 space += textfont.getsize(letter)[0]
                 
-@lyndabot(pattern="^/q")
-async def _(event):
+@run_async
+def _(event):
     if event.fwd_from:
         return
     reply = await event.get_reply_message()
@@ -390,3 +399,11 @@ async def _(event):
     canvas.save('sticker.webp')
     await event.client.send_file(event.chat_id, "sticker.webp", reply_to=event.reply_to_msg_id)
     os.remove('sticker.webp')
+
+ __help__ = "connection_help"
+
+__mod_name__ = "Quote"
+
+QUOTE_CHAT_HANDLER = CommandHandler("connection", _(event))
+
+dispatcher.add_handler(QUOTE_CHAT_HANDLER)
