@@ -2,10 +2,6 @@ from . import dispatcher
 
 try:
 	from emilia.config import Development as Config
-except:
-	import sys
-	print("There is no config file, quitting...", file=sys.stderr)
-	quit(1)
 
 Owner = Config.OWNER_ID
 NoResUser = [Config.OWNER_ID]
