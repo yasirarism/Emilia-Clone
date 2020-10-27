@@ -16,3 +16,4 @@ pytz
 requests
 tzwhere
 spamwatch
+telethon
