@@ -16,5 +16,3 @@ pytz
 requests
 tzwhere
 spamwatch
-telethon
-fontTools
