@@ -27,103 +27,6 @@ from emilia.modules.helper_funcs.alternate import send_message
 WARN_HANDLER_GROUP = 9
 
 
-# Not async
-def warn(user: User, chat: Chat, reason: str, message: Message, warner: User = None, conn=False) -> str:
-    if is_user_admin(chat, user.id):
-        return ""
-
-    if warner:
-        warner_tag = mention_html(warner.id, warner.first_name)
-    else:
-        warner_tag = tl(chat.id, "Filter peringatan otomatis.")
-
-    limit, soft_warn, warn_mode = sql.get_warn_setting(chat.id)
-    num_warns, reasons = sql.warn_user(user.id, chat.id, reason)
-    if num_warns >= limit:
-        sql.reset_warns(user.id, chat.id)
-        if not soft_warn:
-            if not warn_mode:
-                chat.unban_member(user.id)
-                reply = tl(chat.id, "{} peringatan, {} telah ditendang!").format(limit, mention_html(user.id, user.first_name))
-            elif warn_mode == 1:
-                chat.unban_member(user.id)
-                reply = tl(chat.id, "{} peringatan, {} telah ditendang!").format(limit, mention_html(user.id, user.first_name))
-            elif warn_mode == 2:
-                chat.kick_member(user.id)
-                reply = tl(chat.id, "{} peringatan, {} telah diblokir!").format(limit, mention_html(user.id, user.first_name))
-            elif warn_mode == 3:
-                message.bot.restrict_chat_member(chat.id, user.id, can_send_messages=False)
-                reply = tl(chat.id, "{} peringatan, {} telah dibisukan!").format(limit, mention_html(user.id, user.first_name))
-        else:
-            chat.kick_member(user.id)
-            reply = tl(chat.id, "{} peringatan, {} telah diblokir!").format(limit, mention_html(user.id, user.first_name))
-            
-        for warn_reason in reasons:
-            reply += "\n - {}".format(html.escape(warn_reason))
-
-        message.bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
-        keyboard = []
-        log_reason = "<b>{}:</b>" \
-                     "\n#WARN_BAN" \
-                     "\n<b>Admin:</b> {}" \
-                     "\n<b>User:</b> {} (<code>{}</code>)" \
-                     "\n<b>Reason:</b> {}"\
-                     "\n<b>Counts:</b> <code>{}/{}</code>".format(html.escape(chat.title),
-                                                                  warner_tag,
-                                                                  mention_html(user.id, user.first_name),
-                                                                  user.id, reason, num_warns, limit)
-
-    else:
-        keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton(tl(chat.id, "🔘 Hapus peringatan"), callback_data="rm_warn({})".format(user.id)), InlineKeyboardButton(tl(chat.id, "📌 Peraturan"), url="t.me/{}?start={}".format(dispatcher.bot.username, chat.id))]])
-
-        if num_warns+1 == limit:
-            if not warn_mode:
-                action_mode = tl(chat.id, "tendang")
-            elif warn_mode == 1:
-                action_mode = tl(chat.id, "tendang")
-            elif warn_mode == 2:
-                action_mode = tl(chat.id, "blokir")
-            elif warn_mode == 3:
-                action_mode = tl(chat.id, "bisukan")
-            reply = tl(chat.id, "❗️ <b>Warn Event</b>\n   • <b>Pengguna:</b> {}\n   • <b>Total:</b> {}/{} peringatan... Jika anda di peringati lagi maka kamu akan di {}!").format(mention_html(user.id, user.first_name), num_warns, limit, action_mode)
-        else:
-            reply = tl(chat.id, "❗️ <b>Warn Event</b>\n   • <b>Pengguna:</b> {}\n   • <b>Total:</b> {}/{} peringatan... Hati-hati!").format(mention_html(user.id, user.first_name), num_warns, limit)
-        if reason:
-            reply += tl(chat.id, "\n   • <b>Alasan pada peringatan terakhir:</b>\n{}").format(html.escape(reason))
-
-        log_reason = "<b>{}:</b>" \
-                     "\n#WARN" \
-                     "\n<b>Admin:</b> {}" \
-                     "\n<b>User:</b> {} (<code>{}</code>)" \
-                     "\n<b>Reason:</b> {}"\
-                     "\n<b>Counts:</b> <code>{}/{}</code>".format(html.escape(chat.title),
-                                                                  warner_tag,
-                                                                  mention_html(user.id, user.first_name),
-                                                                  user.id, reason, num_warns, limit)
-
-    try:
-        if conn:
-            message.bot.sendMessage(chat.id, reply, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-        else:
-            message.bot.sendMessage(chat.id, reply, reply_to_message_id=message.message_id, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-        #send_message(update.effective_message, reply, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-    except BadRequest as excp:
-        if excp.message == "Reply message not found":
-            # Do not reply
-            if conn:
-                message.bot.sendMessage(chat.id, reply, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-            else:
-                try:
-                    message.bot.sendMessage(chat.id, reply, reply_to_message_id=message.message_id, reply_markup=keyboard, parse_mode=ParseMode.HTML, quote=False)
-                except BadRequest:
-                    message.bot.sendMessage(chat.id, reply, reply_markup=keyboard, parse_mode=ParseMode.HTML, quote=False)
-            #send_message(update.effective_message, reply, reply_markup=keyboard, parse_mode=ParseMode.HTML, quote=False)
-        else:
-            raise
-    return log_reason
-
-
 @run_async
 @user_admin_no_reply
 @bot_admin
@@ -155,57 +58,6 @@ def button(bot: Bot, update: Update) -> str:
             
     return ""
 
-
-@run_async
-@user_admin
-#@can_restrict
-@loggable
-def warn_user(bot: Bot, update: Update, args: List[str]) -> str:
-    spam = spamfilters(update.effective_message.text, update.effective_message.from_user.id, update.effective_chat.id, update.effective_message)
-    if spam == True:
-        return
-    message = update.effective_message  # type: Optional[Message]
-    chat = update.effective_chat  # type: Optional[Chat]
-    warner = update.effective_user  # type: Optional[User]
-    user = update.effective_user
-
-    user_id, reason = extract_user_and_text(message, args)
-
-    conn = connected(bot, update, chat, user.id, need_admin=True)
-    if conn:
-        chat = dispatcher.bot.getChat(conn)
-        chat_id = conn
-        chat_name = dispatcher.bot.getChat(conn).title
-    else:
-        if update.effective_message.chat.type == "private":
-            send_message(update.effective_message, tl(update.effective_message, "Anda bisa lakukan command ini pada grup, bukan pada PM"))
-            return ""
-        chat = update.effective_chat
-        chat_id = update.effective_chat.id
-        chat_name = update.effective_message.chat.title
-
-    check = bot.getChatMember(chat_id, bot.id)
-    if check.status == 'member' or check['can_restrict_members'] == False:
-        if conn:
-            text = tl(update.effective_message, "Saya tidak bisa membatasi orang di {}! Pastikan saya sudah menjadi admin.").format(chat_name)
-        else:
-            text = tl(update.effective_message, "Saya tidak bisa membatasi orang di sini! Pastikan saya sudah menjadi admin.")
-        send_message(update.effective_message, text, parse_mode="markdown")
-        return ""
-
-    if user_id:
-        if conn:
-            warning = warn(chat.get_member(user_id).user, chat, reason, message, warner, conn=True)
-            send_message(update.effective_message, tl(update.effective_message, "Saya sudah memperingatinya pada grup *{}*").format(chat_name), parse_mode="markdown")
-            return warning
-        else:
-            if message.reply_to_message and message.reply_to_message.from_user.id == user_id:
-                return warn(message.reply_to_message.from_user, chat, reason, message.reply_to_message, warner)
-            else:
-                return warn(chat.get_member(user_id).user, chat, reason, message, warner)
-    else:
-        send_message(update.effective_message, tl(update.effective_message, "Tidak ada pengguna yang ditunjuk!"))
-    return ""
 
 
 @run_async
@@ -867,11 +719,11 @@ __help__ = "warns_help"
 
 __mod_name__ = "Warnings"
 
-WARN_HANDLER = CommandHandler("warn", warn_user, pass_args=True)#, filters=Filters.group)
+#WARN_HANDLER = CommandHandler("warn", warn_user, pass_args=True)#, filters=Filters.group)
 RESET_WARN_HANDLER = CommandHandler(["resetwarn", "resetwarns", "rmwarn"], reset_warns, pass_args=True)#, filters=Filters.group)
 CALLBACK_QUERY_HANDLER = CallbackQueryHandler(button, pattern=r"rm_warn")
 MYWARNS_HANDLER = DisableAbleCommandHandler("warns", warns, pass_args=True)#, filters=Filters.group)
-ADD_WARN_HANDLER = CommandHandler("addwarn", add_warn_filter)#, filters=Filters.group)
+#ADD_WARN_HANDLER = CommandHandler("addwarn", add_warn_filter)#, filters=Filters.group)
 RM_WARN_HANDLER = CommandHandler(["nowarn", "stopwarn"], remove_warn_filter)#, filters=Filters.group)
 LIST_WARN_HANDLER = DisableAbleCommandHandler(["warnlist", "warnfilters"], list_warn_filters)#, filters=Filters.group, admin_ok=True)
 WARN_FILTER_HANDLER = MessageHandler(CustomFilters.has_text & Filters.group, reply_filter)
@@ -880,11 +732,11 @@ WARN_STRENGTH_HANDLER = CommandHandler("strongwarn", set_warn_strength, pass_arg
 WARN_MODE_HANDLER = CommandHandler("warnmode", set_warn_mode, pass_args=True)
 # WARN_BTNSET_HANDLER = CallbackQueryHandler(WARN_EDITBTN, pattern=r"set_wlim")
 
-dispatcher.add_handler(WARN_HANDLER)
+#dispatcher.add_handler(WARN_HANDLER)
 dispatcher.add_handler(CALLBACK_QUERY_HANDLER)
 dispatcher.add_handler(RESET_WARN_HANDLER)
 dispatcher.add_handler(MYWARNS_HANDLER)
-dispatcher.add_handler(ADD_WARN_HANDLER)
+#dispatcher.add_handler(ADD_WARN_HANDLER)
 dispatcher.add_handler(RM_WARN_HANDLER)
 dispatcher.add_handler(LIST_WARN_HANDLER)
 dispatcher.add_handler(WARN_LIMIT_HANDLER)
