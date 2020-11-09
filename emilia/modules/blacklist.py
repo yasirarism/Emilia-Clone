@@ -15,7 +15,7 @@ from emilia.modules.helper_funcs.chat_status import user_admin, user_not_admin
 from emilia.modules.helper_funcs.extraction import extract_text
 from emilia.modules.helper_funcs.misc import split_message
 from emilia.modules.log_channel import loggable
-from emilia.modules.warns import warn
+#from emilia.modules.warns import warn
 from emilia.modules.helper_funcs.string_handling import extract_time
 from emilia.modules.connection import connected
 
