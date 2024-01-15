@@ -13,41 +13,44 @@ DELIMITERS = ("/", ":", "|", "_")
 
 
 def separate_sed(sed_string):
-    if len(sed_string) >= 3 and sed_string[1] in DELIMITERS and sed_string.count(sed_string[1]) >= 2:
-        delim = sed_string[1]
-        start = counter = 2
-        while counter < len(sed_string):
-            if sed_string[counter] == "\\":
-                counter += 1
-
-            elif sed_string[counter] == delim:
-                replace = sed_string[start:counter]
-                counter += 1
-                start = counter
-                break
-
+    if (
+        len(sed_string) < 3
+        or sed_string[1] not in DELIMITERS
+        or sed_string.count(sed_string[1]) < 2
+    ):
+        return
+    delim = sed_string[1]
+    start = counter = 2
+    while counter < len(sed_string):
+        if sed_string[counter] == "\\":
             counter += 1
 
-        else:
-            return None
-
-        while counter < len(sed_string):
-            if sed_string[counter] == "\\" and counter + 1 < len(sed_string) and sed_string[counter + 1] == delim:
-                sed_string = sed_string[:counter] + sed_string[counter + 1:]
-
-            elif sed_string[counter] == delim:
-                replace_with = sed_string[start:counter]
-                counter += 1
-                break
-
+        elif sed_string[counter] == delim:
+            replace = sed_string[start:counter]
             counter += 1
-        else:
-            return replace, sed_string[start:], ""
+            start = counter
+            break
 
-        flags = ""
-        if counter < len(sed_string):
-            flags = sed_string[counter:]
-        return replace, replace_with, flags.lower()
+        counter += 1
+
+    else:
+        return None
+
+    while counter < len(sed_string):
+        if sed_string[counter] == "\\" and counter + 1 < len(sed_string) and sed_string[counter + 1] == delim:
+            sed_string = sed_string[:counter] + sed_string[counter + 1:]
+
+        elif sed_string[counter] == delim:
+            replace_with = sed_string[start:counter]
+            counter += 1
+            break
+
+        counter += 1
+    else:
+        return replace, sed_string[start:], ""
+
+    flags = sed_string[counter:] if counter < len(sed_string) else ""
+    return replace, replace_with, flags.lower()
 
 def elapsed_time():
     global start_time
@@ -87,9 +90,9 @@ def sed(bot: Bot, update: Update):
                 check = re.match(repl, to_fix, flags=re.IGNORECASE)
 
                 if check and check.group(0).lower() == to_fix.lower():
-                    update.effective_message.reply_to_message.reply_text("Hai semuanya, {} sedang mencoba untuk membuat "
-                                                                         "saya mengatakan hal-hal yang saya tidak mau "
-                                                                         "katakan!".format(update.effective_user.first_name))
+                    update.effective_message.reply_to_message.reply_text(
+                        f"Hai semuanya, {update.effective_user.first_name} sedang mencoba untuk membuat saya mengatakan hal-hal yang saya tidak mau katakan!"
+                    )
                     return
 
                 if 'i' in flags and 'g' in flags:
@@ -129,6 +132,8 @@ seperti: \\?.
 __mod_name__ = "Sed/Regex"
 
 
-SED_HANDLER = DisableAbleRegexHandler(r's([{}]).*?\1.*'.format("".join(DELIMITERS)), sed, friendly="sed")
+SED_HANDLER = DisableAbleRegexHandler(
+    f's([{"".join(DELIMITERS)}]).*?\1.*', sed, friendly="sed"
+)
 
 dispatcher.add_handler(SED_HANDLER)

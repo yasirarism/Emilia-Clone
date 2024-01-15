@@ -46,7 +46,7 @@ def set_blue_text_must_click(bot: Bot, update: Update, args):
 
 	if len(args) >= 1:
 		val = args[0].lower()
-		if val == "off" or val == "no":
+		if val in ["off", "no"]:
 			sql.set_cleanbt(chat_id, False)
 			if conn:
 				text = tl(update.effective_message, "Penghapus pesan biru telah di *non-aktifka*n di *{}*.").format(chat_name)
@@ -54,7 +54,7 @@ def set_blue_text_must_click(bot: Bot, update: Update, args):
 				text = tl(update.effective_message, "Penghapus pesan biru telah di *non-aktifkan*.")
 			send_message(update.effective_message, text, parse_mode="markdown")
 
-		elif val == "yes" or val == "ya" or val == "on":
+		elif val in ["yes", "ya", "on"]:
 			sql.set_cleanbt(chat_id, True)
 			if conn:
 				text = tl(update.effective_message, "Penghapus pesan biru telah di *aktifkan* di *{}*.").format(chat_name)

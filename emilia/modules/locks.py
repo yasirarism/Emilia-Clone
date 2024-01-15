@@ -75,8 +75,6 @@ tg.CommandHandler = CustomCommandHandler
 # NOT ASYNC
 def restr_members(bot, chat_id, members, messages=False, media=False, other=False, previews=False):
     for mem in members:
-        if mem.user in SUDO_USERS:
-            pass
         try:
             bot.restrict_chat_member(chat_id, mem.user,
                                      can_send_messages=messages,

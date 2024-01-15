@@ -22,18 +22,17 @@ def about_me(bot: Bot, update: Update, args: List[str]):
         return
 
     message = update.effective_message  # type: Optional[Message]
-    user_id = extract_user(message, args)
-
-    if user_id:
+    if user_id := extract_user(message, args):
         user = bot.get_chat(user_id)
     else:
         user = message.from_user
 
-    info = sql.get_user_me_info(user.id)
-
-    if info:
-        send_message(update.effective_message, "*{}*:\n{}".format(user.first_name, escape_markdown(info)),
-                                            parse_mode=ParseMode.MARKDOWN)
+    if info := sql.get_user_me_info(user.id):
+        send_message(
+            update.effective_message,
+            f"*{user.first_name}*:\n{escape_markdown(info)}",
+            parse_mode=ParseMode.MARKDOWN,
+        )
     elif message.reply_to_message:
         username = message.reply_to_message.from_user.first_name
         send_message(update.effective_message, username + tl(update.effective_message, " belum mengatur pesan info tentang diri mereka!"))
@@ -68,17 +67,17 @@ def about_bio(bot: Bot, update: Update, args: List[str]):
 
     message = update.effective_message  # type: Optional[Message]
 
-    user_id = extract_user(message, args)
-    if user_id:
+    if user_id := extract_user(message, args):
         user = bot.get_chat(user_id)
     else:
         user = message.from_user
 
-    info = sql.get_user_bio(user.id)
-
-    if info:
-        send_message(update.effective_message, "*{}*:\n{}".format(user.first_name, escape_markdown(info)),
-                                            parse_mode=ParseMode.MARKDOWN)
+    if info := sql.get_user_bio(user.id):
+        send_message(
+            update.effective_message,
+            f"*{user.first_name}*:\n{escape_markdown(info)}",
+            parse_mode=ParseMode.MARKDOWN,
+        )
     elif message.reply_to_message:
         username = user.first_name
         send_message(update.effective_message, tl(update.effective_message, "{} belum memiliki pesan tentang dirinya sendiri!").format(username))
@@ -93,10 +92,10 @@ def set_about_bio(bot: Bot, update: Update):
         return
 
     message = update.effective_message  # type: Optional[Message]
-    sender = update.effective_user  # type: Optional[User]
     if message.reply_to_message:
         repl_message = message.reply_to_message
         user_id = repl_message.from_user.id
+        sender = update.effective_user  # type: Optional[User]
         if user_id == message.from_user.id:
             send_message(update.effective_message, tl(update.effective_message, "Ha, Anda tidak dapat mengatur bio Anda sendiri! Anda berada di bawah belas kasihan orang lain di sini..."))
             return

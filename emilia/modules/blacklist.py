@@ -34,28 +34,26 @@ def blacklist(bot: Bot, update: Update, args: List[str]):
 	spam = spamfilters(update.effective_message.text, update.effective_message.from_user.id, update.effective_chat.id, update.effective_message)
 	if spam == True:
 		return
-	
-	conn = connected(bot, update, chat, user.id, need_admin=False)
-	if conn:
+
+	if conn := connected(bot, update, chat, user.id, need_admin=False):
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
 	else:
 		if chat.type == "private":
 			return
-		else:
-			chat_id = update.effective_chat.id
-			chat_name = chat.title
-	
+		chat_id = update.effective_chat.id
+		chat_name = chat.title
+
 	filter_list = tl(update.effective_message, "<b>Kata daftar hitam saat ini di {}:</b>\n").format(chat_name)
 
 	all_blacklisted = sql.get_chat_blacklist(chat_id)
 
-	if len(args) > 0 and args[0].lower() == 'copy':
+	if args and args[0].lower() == 'copy':
 		for trigger in all_blacklisted:
-			filter_list += "<code>{}</code>\n".format(html.escape(trigger))
+			filter_list += f"<code>{html.escape(trigger)}</code>\n"
 	else:
 		for trigger in all_blacklisted:
-			filter_list += " - <code>{}</code>\n".format(html.escape(trigger))
+			filter_list += f" - <code>{html.escape(trigger)}</code>\n"
 
 	# for trigger in all_blacklisted:
 	#     filter_list += " - <code>{}</code>\n".format(html.escape(trigger))
@@ -80,8 +78,7 @@ def add_blacklist(bot: Bot, update: Update):
 	if spam == True:
 		return
 
-	conn = connected(bot, update, chat, user.id)
-	if conn:
+	if conn := connected(bot, update, chat, user.id):
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
 	else:
@@ -93,7 +90,9 @@ def add_blacklist(bot: Bot, update: Update):
 
 	if len(words) > 1:
 		text = words[1]
-		to_blacklist = list(set(trigger.strip() for trigger in text.split("\n") if trigger.strip()))
+		to_blacklist = list(
+			{trigger.strip() for trigger in text.split("\n") if trigger.strip()}
+		)
 		for trigger in to_blacklist:
 			sql.add_to_blacklist(chat_id, trigger.lower())
 
@@ -120,8 +119,7 @@ def unblacklist(bot: Bot, update: Update):
 	if spam == True:
 		return
 
-	conn = connected(bot, update, chat, user.id)
-	if conn:
+	if conn := connected(bot, update, chat, user.id):
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
 	else:
@@ -134,7 +132,9 @@ def unblacklist(bot: Bot, update: Update):
 
 	if len(words) > 1:
 		text = words[1]
-		to_unblacklist = list(set(trigger.strip() for trigger in text.split("\n") if trigger.strip()))
+		to_unblacklist = list(
+			{trigger.strip() for trigger in text.split("\n") if trigger.strip()}
+		)
 		successful = 0
 		for trigger in to_unblacklist:
 			success = sql.rm_from_blacklist(chat_id, trigger.lower())
@@ -189,10 +189,10 @@ def blacklist_mode(bot: Bot, update: Update, args: List[str]):
 		chat_name = update.effective_message.chat.title
 
 	if args:
-		if args[0].lower() == 'off' or args[0].lower() == 'nothing' or args[0].lower() == 'no':
+		if args[0].lower() in ['off', 'nothing', 'no']:
 			settypeblacklist = tl(update.effective_message, 'di biarkan')
 			sql.set_blacklist_strength(chat_id, 0, "0")
-		elif args[0].lower() == 'del' or args[0].lower() == 'delete':
+		elif args[0].lower() in ['del', 'delete']:
 			settypeblacklist = tl(update.effective_message, 'di biarkan, pesannya akan dihapus')
 			sql.set_blacklist_strength(chat_id, 1, "0")
 		elif args[0].lower() == 'warn':
@@ -245,10 +245,7 @@ Contoh nilai waktu: 4m = 4 menit, 3h = 3 jam, 6d = 6 hari, 5w = 5 minggu.""")
 		else:
 			text = tl(update.effective_message, "Mode blacklist diubah, Pengguna akan `{}`!").format(settypeblacklist)
 		send_message(update.effective_message, text, parse_mode="markdown")
-		return "<b>{}:</b>\n" \
-				"<b>Admin:</b> {}\n" \
-				"Changed the blacklist mode. will {}.".format(html.escape(chat.title),
-																			mention_html(user.id, user.first_name), settypeblacklist)
+		return f"<b>{html.escape(chat.title)}:</b>\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\nChanged the blacklist mode. will {settypeblacklist}."
 	else:
 		getmode, getvalue = sql.get_blacklist_setting(chat.id)
 		if getmode == 0:
@@ -313,8 +310,7 @@ def del_blacklist(bot: Bot, update: Update):
 					return
 				elif getmode == 4:
 					message.delete()
-					res = chat.unban_member(update.effective_user.id)
-					if res:
+					if res := chat.unban_member(update.effective_user.id):
 						bot.sendMessage(chat.id, tl(update.effective_message, "{} di tendang karena mengatakan kata '{}' yang ada di daftar hitam").format(mention_markdown(user.id, user.first_name), trigger), parse_mode="markdown")
 					return
 				elif getmode == 5:
@@ -335,9 +331,7 @@ def del_blacklist(bot: Bot, update: Update):
 					bot.sendMessage(chat.id, tl(update.effective_message, "{} di bisukan selama {} karena mengatakan kata '{}' yang ada di daftar hitam").format(mention_markdown(user.id, user.first_name), value, trigger), parse_mode="markdown")
 					return
 			except BadRequest as excp:
-				if excp.message == "Message to delete not found":
-					pass
-				else:
+				if excp.message != "Message to delete not found":
 					LOGGER.exception("Error while deleting blacklist message.")
 			break
 

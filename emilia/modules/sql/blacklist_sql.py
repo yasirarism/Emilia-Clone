@@ -15,12 +15,14 @@ class BlackListFilters(BASE):
         self.trigger = trigger
 
     def __repr__(self):
-        return "<Blacklist filter '%s' for %s>" % (self.trigger, self.chat_id)
+        return f"<Blacklist filter '{self.trigger}' for {self.chat_id}>"
 
     def __eq__(self, other):
-        return bool(isinstance(other, BlackListFilters)
-                    and self.chat_id == other.chat_id
-                    and self.trigger == other.trigger)
+        return (
+            isinstance(other, BlackListFilters)
+            and self.chat_id == other.chat_id
+            and self.trigger == other.trigger
+        )
 
 class BlacklistSettings(BASE):
     __tablename__ = "blacklist_settings"
@@ -34,7 +36,7 @@ class BlacklistSettings(BASE):
         self.value = value
 
     def __repr__(self):
-        return "<{} will executing {} for blacklist trigger.>".format(self.chat_id, self.blacklist_type)
+        return f"<{self.chat_id} will executing {self.blacklist_type} for blacklist trigger.>"
 
 
 BlackListFilters.__table__.create(checkfirst=True)
@@ -62,8 +64,9 @@ def add_to_blacklist(chat_id, trigger):
 
 def rm_from_blacklist(chat_id, trigger):
     with BLACKLIST_FILTER_INSERTION_LOCK:
-        blacklist_filt = SESSION.query(BlackListFilters).get((str(chat_id), trigger))
-        if blacklist_filt:
+        if blacklist_filt := SESSION.query(BlackListFilters).get(
+            (str(chat_id), trigger)
+        ):
             if trigger in CHAT_BLACKLISTS.get(str(chat_id), set()):  # sanity check
                 CHAT_BLACKLISTS.get(str(chat_id), set()).remove(trigger)
 
@@ -125,8 +128,7 @@ def set_blacklist_strength(chat_id, blacklist_type, value):
 
 def get_blacklist_setting(chat_id):
     try:
-        setting = CHAT_SETTINGS_BLACKLISTS.get(str(chat_id))
-        if setting:
+        if setting := CHAT_SETTINGS_BLACKLISTS.get(str(chat_id)):
             return setting['blacklist_type'], setting['value']
         else:
             return 1, "0"

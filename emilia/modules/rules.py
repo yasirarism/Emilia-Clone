@@ -33,13 +33,12 @@ def send_rules(update, chat_id, from_pm=False):
     try:
         chat = bot.get_chat(chat_id)
     except BadRequest as excp:
-        if excp.message == "Chat not found" and from_pm:
-            bot.send_message(user.id, tl(update.effective_message, "Pintasan aturan untuk obrolan ini belum diatur dengan benar! Mintalah admin untuk "
-                                      "perbaiki ini."))
-            return
-        else:
+        if excp.message != "Chat not found" or not from_pm:
             raise
 
+        bot.send_message(user.id, tl(update.effective_message, "Pintasan aturan untuk obrolan ini belum diatur dengan benar! Mintalah admin untuk "
+                                  "perbaiki ini."))
+        return
     conn = connected(bot, update, chat, user.id, need_admin=False)
     if conn:
         chat = dispatcher.bot.getChat(conn)
@@ -65,24 +64,35 @@ def send_rules(update, chat_id, from_pm=False):
             bot.send_message(user.id, tl(update.effective_message, "Admin grup belum menetapkan aturan apa pun untuk obrolan ini. "
                                       "Bukan berarti obrolan ini tanpa hukum...!"))
     elif rules:
-        if (update.effective_message.chat.type == "private" or not is_private) and rules:
-            if not is_private:
-                send_message(update.effective_message, text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(build_keyboard_alternate(buttons)))
-            else:
+        if update.effective_message.chat.type == "private" or not is_private:
+            if is_private:
                 bot.send_message(user.id, text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(build_keyboard_alternate(buttons)))
+            else:
+                send_message(update.effective_message, text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(build_keyboard_alternate(buttons)))
         else:
-            send_message(update.effective_message, tl(update.effective_message, "Hubungi saya di PM untuk mendapatkan aturan grup ini"),
-                                                reply_markup=InlineKeyboardMarkup(
-                                                    [[InlineKeyboardButton(text=tl(update.effective_message, "Peraturan"),
-                                                                           url="t.me/{}?start={}".format(bot.username,
-                                                                                                         chat_id))]]))
+            send_message(
+                update.effective_message,
+                tl(
+                    update.effective_message,
+                    "Hubungi saya di PM untuk mendapatkan aturan grup ini",
+                ),
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                text=tl(update.effective_message, "Peraturan"),
+                                url=f"t.me/{bot.username}?start={chat_id}",
+                            )
+                        ]
+                    ]
+                ),
+            )
+    elif conn:
+        send_message(update.effective_message, tl(update.effective_message, "Admin grup belum menetapkan aturan apa pun untuk *{}*. "
+                                            "Bukan berarti obrolan ini tanpa hukum...!").format(chat_name), parse_mode="markdown")
     else:
-        if conn:
-            send_message(update.effective_message, tl(update.effective_message, "Admin grup belum menetapkan aturan apa pun untuk *{}*. "
-                                                "Bukan berarti obrolan ini tanpa hukum...!").format(chat_name), parse_mode="markdown")
-        else:
-            send_message(update.effective_message, tl(update.effective_message, "Admin grup belum menetapkan aturan apa pun untuk obrolan ini. "
-                                                "Bukan berarti obrolan ini tanpa hukum...!"))
+        send_message(update.effective_message, tl(update.effective_message, "Admin grup belum menetapkan aturan apa pun untuk obrolan ini. "
+                                            "Bukan berarti obrolan ini tanpa hukum...!"))
 
 
 @run_async
@@ -144,8 +154,7 @@ def clear_rules(bot: Bot, update: Update):
     chat_id = update.effective_chat.id
     user = update.effective_user
 
-    conn = connected(bot, update, chat, user.id, need_admin=True)
-    if conn:
+    if conn := connected(bot, update, chat, user.id, need_admin=True):
         chat = dispatcher.bot.getChat(conn)
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -170,18 +179,13 @@ def private_rules(bot: Bot, update: Update, args: List[str]):
         return
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
-    conn = connected(bot, update, chat, user.id)
-    if conn:
+    if conn := connected(bot, update, chat, user.id):
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
     else:
         chat_id = update.effective_chat.id
-        if chat.type == "private":
-            chat_name = chat.title
-        else:
-            chat_name = chat.title
-
-    if len(args) >= 1:
+        chat_name = chat.title
+    if args:
         if args[0] in ("yes", "on", "ya"):
             sql.private_rules(str(chat_id), True)
             send_message(update.effective_message, tl(update.effective_message, "Private Rules di *aktifkan*, pesan peraturan akan di kirim di PM."), parse_mode="markdown")

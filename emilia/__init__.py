@@ -38,22 +38,24 @@ if ENV:
 	OWNER_USERNAME = os.environ.get("OWNER_USERNAME", None)
 
 	try:
-		SUDO_USERS = set(int(x) for x in os.environ.get("SUDO_USERS", "").split())
+		SUDO_USERS = {int(x) for x in os.environ.get("SUDO_USERS", "").split()}
 	except ValueError:
 		raise Exception("Your sudo users list does not contain valid integers.")
 
 	try:
-		SUPPORT_USERS = set(int(x) for x in os.environ.get("SUPPORT_USERS", "").split())
+		SUPPORT_USERS = {int(x) for x in os.environ.get("SUPPORT_USERS", "").split()}
 	except ValueError:
 		raise Exception("Your support users list does not contain valid integers.")
 
 	try:
-		SPAMMERS = set(int(x) for x in os.environ.get("SPAMMERS", "").split())
+		SPAMMERS = {int(x) for x in os.environ.get("SPAMMERS", "").split()}
 	except ValueError:
 		raise Exception("Your spammers users list does not contain valid integers.")
 
 	try:
-		WHITELIST_USERS = set(int(x) for x in os.environ.get("WHITELIST_USERS", "").split())
+		WHITELIST_USERS = {
+			int(x) for x in os.environ.get("WHITELIST_USERS", "").split()
+		}
 	except ValueError:
 		raise Exception("Your whitelisted users list does not contain valid integers.")
 
@@ -89,22 +91,22 @@ else:
 	OWNER_USERNAME = Config.OWNER_USERNAME
 
 	try:
-		SUDO_USERS = set(int(x) for x in Config.SUDO_USERS or [])
+		SUDO_USERS = {int(x) for x in Config.SUDO_USERS or []}
 	except ValueError:
 		raise Exception("Your sudo users list does not contain valid integers.")
 
 	try:
-		SUPPORT_USERS = set(int(x) for x in Config.SUPPORT_USERS or [])
+		SUPPORT_USERS = {int(x) for x in Config.SUPPORT_USERS or []}
 	except ValueError:
 		raise Exception("Your support users list does not contain valid integers.")
 
 	try:
-		SPAMMERS = set(int(x) for x in Config.SPAMMERS or [])
+		SPAMMERS = {int(x) for x in Config.SPAMMERS or []}
 	except ValueError:
 		raise Exception("Your spammers users list does not contain valid integers.")
 
 	try:
-		WHITELIST_USERS = set(int(x) for x in Config.WHITELIST_USERS or [])
+		WHITELIST_USERS = {int(x) for x in Config.WHITELIST_USERS or []}
 	except ValueError:
 		raise Exception("Your whitelisted users list does not contain valid integers.")
 
@@ -172,16 +174,14 @@ def spamfilters(text, user_id, chat_id, message):
 	# If msg from self, return True
 	if user_id == 692882995:
 		return False
-	print("{} | {} | {} | {}".format(text, user_id, message.chat.title, chat_id))
+	print(f"{text} | {user_id} | {message.chat.title} | {chat_id}")
 	if antispam_module:
 		parsing_date = time.mktime(message.date.timetuple())
-		detecting = detect_user(user_id, chat_id, message, parsing_date)
-		if detecting:
+		if detecting := detect_user(user_id, chat_id, message, parsing_date):
 			return True
 		antispam_restrict_user(user_id, parsing_date)
-	if int(user_id) in SPAMMERS:
-		print("This user is spammer!")
-		return True
-	else:
+	if int(user_id) not in SPAMMERS:
 		return False
+	print("This user is spammer!")
+	return True
 

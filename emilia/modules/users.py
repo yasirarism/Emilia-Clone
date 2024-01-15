@@ -43,9 +43,7 @@ def get_user_id(username):
                     return userdat.id
 
             except BadRequest as excp:
-                if excp.message == 'Chat not found':
-                    pass
-                else:
+                if excp.message != 'Chat not found':
                     LOGGER.exception("Error extracting user ID")
 
     return None
@@ -65,18 +63,18 @@ def broadcast(bot: Bot, update: Update):
                 failed += 1
                 LOGGER.warning("Couldn't send broadcast to %s, group name %s", str(chat.chat_id), str(chat.chat_name))
 
-        send_message(update.effective_message, "Siaran selesai. {} grup gagal menerima pesan, mungkin "
-                                            "karena ditendang.".format(failed))
+        send_message(
+            update.effective_message,
+            f"Siaran selesai. {failed} grup gagal menerima pesan, mungkin karena ditendang.",
+        )
 
 
 @run_async
 def log_user(bot: Bot, update: Update):
     chat = update.effective_chat  # type: Optional[Chat]
     msg = update.effective_message  # type: Optional[Message]
-    fed_id = fedsql.get_fed_id(chat.id)
-    if fed_id:
-        user = update.effective_user
-        if user:
+    if fed_id := fedsql.get_fed_id(chat.id):
+        if user := update.effective_user:
             fban, fbanreason, fbantime = fedsql.get_fban_user(fed_id, user.id)
             if fban:
                 send_message(update.effective_message, languages.tl(update.effective_message, "Pengguna ini dilarang di federasi saat ini!\nAlasan: `{}`").format(fbanreason), parse_mode="markdown")
@@ -106,7 +104,7 @@ def chats(bot: Bot, update: Update):
     all_chats = sql.get_all_chats() or []
     chatfile = 'Daftar obrolan.\n'
     for chat in all_chats:
-        chatfile += "{} - ({})\n".format(chat.chat_name, chat.chat_id)
+        chatfile += f"{chat.chat_name} - ({chat.chat_id})\n"
 
     with BytesIO(str.encode(chatfile)) as output:
         output.name = "chatlist.txt"

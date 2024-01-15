@@ -95,7 +95,7 @@ if is_module_loaded(FILENAME):
             chat_id = update.effective_chat.id
             chat_name = update.effective_message.chat.title
 
-        if len(args) >= 1:
+        if args:
             disable_cmd = args[0]
             if disable_cmd.startswith(CMD_STARTERS):
                 disable_cmd = disable_cmd[1:]
@@ -137,7 +137,7 @@ if is_module_loaded(FILENAME):
             chat_id = update.effective_chat.id
             chat_name = update.effective_message.chat.title
 
-        if len(args) >= 1:
+        if args:
             enable_cmd = args[0]
             if enable_cmd.startswith(CMD_STARTERS):
                 enable_cmd = enable_cmd[1:]
@@ -164,9 +164,10 @@ if is_module_loaded(FILENAME):
             return
 
         if DISABLE_CMDS + DISABLE_OTHER:
-            result = ""
-            for cmd in set(DISABLE_CMDS + DISABLE_OTHER):
-                result += " - `{}`\n".format(escape_markdown(cmd))
+            result = "".join(
+                f" - `{escape_markdown(cmd)}`\n"
+                for cmd in set(DISABLE_CMDS + DISABLE_OTHER)
+            )
             send_message(update.effective_message, languages.tl(update.effective_message, "Perintah berikut dapat diubah:\n{}").format(result),
                                                 parse_mode=ParseMode.MARKDOWN)
         else:
@@ -184,11 +185,11 @@ if is_module_loaded(FILENAME):
 
         if len(msg.text.split()) >= 2:
             args = msg.text.split(None, 1)[1]
-            if args == "yes" or args == "on" or args == "ya":
+            if args in ["yes", "on", "ya"]:
                 sql.disabledel_set(chat.id, True)
                 send_message(update.effective_message, languages.tl(update.effective_message, "Ketika command di nonaktifkan, maka saya *akan menghapus* pesan command tsb."), parse_mode="markdown")
                 return
-            elif args == "no" or args == "off":
+            elif args in ["no", "off"]:
                 sql.disabledel_set(chat.id, False)
                 send_message(update.effective_message, languages.tl(update.effective_message, "Saya *tidak akan menghapus* pesan dari command yang di nonaktifkan."), parse_mode="markdown")
                 return
@@ -204,9 +205,7 @@ if is_module_loaded(FILENAME):
         if not disabled:
             return languages.tl(update.effective_message, "Tidak ada perintah yang dinonaktifkan!")
 
-        result = ""
-        for cmd in disabled:
-            result += " - `{}`\n".format(escape_markdown(cmd))
+        result = "".join(f" - `{escape_markdown(cmd)}`\n" for cmd in disabled)
         return languages.tl(chat_id, "Perintah-perintah berikut saat ini dibatasi:\n{}").format(result)
 
 
@@ -218,8 +217,7 @@ if is_module_loaded(FILENAME):
         if spam == True:
             return
 
-        conn = connected(bot, update, chat, user.id, need_admin=True)
-        if conn:
+        if conn := connected(bot, update, chat, user.id, need_admin=True):
             chat = dispatcher.bot.getChat(conn)
             chat_id = conn
             chat_name = dispatcher.bot.getChat(conn).title

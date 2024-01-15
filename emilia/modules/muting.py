@@ -20,7 +20,6 @@ from emilia.modules.helper_funcs.alternate import send_message
 
 @run_async
 @bot_admin
-#@can_restrict
 @user_admin
 @loggable
 def mute(bot: Bot, update: Update, args: List[str]) -> str:
@@ -36,8 +35,7 @@ def mute(bot: Bot, update: Update, args: List[str]) -> str:
         send_message(update.effective_message, tl(update.effective_message, "Anda harus memberi saya nama pengguna untuk membungkam, atau membalas seseorang untuk dibisukan."))
         return ""
 
-    conn = connected(bot, update, chat, user.id, need_admin=True)
-    if conn:
+    if conn := connected(bot, update, chat, user.id, need_admin=True):
         chat = dispatcher.bot.getChat(conn)
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -60,21 +58,14 @@ def mute(bot: Bot, update: Update, args: List[str]) -> str:
         send_message(update.effective_message, tl(update.effective_message, "Anda tidak punya hak untuk membatasi seseorang."))
         return ""
 
-    member = chat.get_member(int(user_id))
-
-    if member:
+    if member := chat.get_member(int(user_id)):
         if is_user_admin(chat, user_id, member=member):
             send_message(update.effective_message, tl(update.effective_message, "Saya tidak bisa menghentikan seorang admin berbicara!"))
 
         elif member.can_send_messages is None or member.can_send_messages:
             bot.restrict_chat_member(chat.id, user_id, can_send_messages=False)
             send_message(update.effective_message, text, parse_mode="markdown")
-            return "<b>{}:</b>" \
-                   "\n#MUTE" \
-                   "\n<b>Admin:</b> {}" \
-                   "\n<b>User:</b> {}".format(html.escape(chat.title),
-                                              mention_html(user.id, user.first_name),
-                                              mention_html(member.user.id, member.user.first_name))
+            return f"<b>{html.escape(chat.title)}:</b>\n#MUTE\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\n<b>User:</b> {mention_html(member.user.id, member.user.first_name)}"
 
         else:
             send_message(update.effective_message, tl(update.effective_message, "Pengguna ini sudah dibungkam!"))
@@ -101,8 +92,7 @@ def unmute(bot: Bot, update: Update, args: List[str]) -> str:
         send_message(update.effective_message, tl(update.effective_message, "Anda harus memberi saya nama pengguna untuk menyuarakan, atau membalas seseorang untuk disuarakan."))
         return ""
 
-    conn = connected(bot, update, chat, user.id, need_admin=True)
-    if conn:
+    if conn := connected(bot, update, chat, user.id, need_admin=True):
         chat = dispatcher.bot.getChat(conn)
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -123,14 +113,12 @@ def unmute(bot: Bot, update: Update, args: List[str]) -> str:
         send_message(update.effective_message, tl(update.effective_message, "Anda tidak punya hak untuk membatasi seseorang."))
         return ""
 
-    member = chat.get_member(int(user_id))
-
-    if member:
+    if member := chat.get_member(int(user_id)):
         if is_user_admin(chat, user_id, member=member):
             send_message(update.effective_message, tl(update.effective_message, "Dia adalah admin, apa yang Anda harapkan kepada saya?"))
             return ""
 
-        elif member.status != 'kicked' and member.status != 'left':
+        elif member.status not in ['kicked', 'left']:
             if member.can_send_messages and member.can_send_media_messages \
                     and member.can_send_other_messages and member.can_add_web_page_previews:
                 send_message(update.effective_message, text, parse_mode="markdown")
@@ -142,12 +130,7 @@ def unmute(bot: Bot, update: Update, args: List[str]) -> str:
                                          can_send_other_messages=True,
                                          can_add_web_page_previews=True)
                 send_message(update.effective_message, text2, parse_mode="markdown")
-                return "<b>{}:</b>" \
-                       "\n#UNMUTE" \
-                       "\n<b>Admin:</b> {}" \
-                       "\n<b>User:</b> {}".format(html.escape(chat.title),
-                                                  mention_html(user.id, user.first_name),
-                                                  mention_html(member.user.id, member.user.first_name))
+                return f"<b>{html.escape(chat.title)}:</b>\n#UNMUTE\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\n<b>User:</b> {mention_html(member.user.id, member.user.first_name)}"
     else:
         send_message(update.effective_message, tl(update.effective_message, "Pengguna ini bahkan tidak dalam obrolan, menyuarakannya tidak akan membuat mereka berbicara lebih dari "
                            "yang sudah mereka lakukan!"))
@@ -157,7 +140,6 @@ def unmute(bot: Bot, update: Update, args: List[str]) -> str:
 
 @run_async
 @bot_admin
-#@can_restrict
 @user_admin
 @loggable
 def temp_mute(bot: Bot, update: Update, args: List[str]) -> str:
@@ -190,12 +172,11 @@ def temp_mute(bot: Bot, update: Update, args: List[str]) -> str:
     try:
         member = chat.get_member(user_id)
     except BadRequest as excp:
-        if excp.message == "User not found":
-            send_message(update.effective_message, tl(update.effective_message, "Saya tidak dapat menemukan pengguna ini"))
-            return ""
-        else:
+        if excp.message != "User not found":
             raise
 
+        send_message(update.effective_message, tl(update.effective_message, "Saya tidak dapat menemukan pengguna ini"))
+        return ""
     if is_user_admin(chat, user_id, member):
         send_message(update.effective_message, tl(update.effective_message, "Saya benar-benar berharap dapat membisukan admin..."))
         return ""
@@ -216,24 +197,15 @@ def temp_mute(bot: Bot, update: Update, args: List[str]) -> str:
     split_reason = reason.split(None, 1)
 
     time_val = split_reason[0].lower()
-    if len(split_reason) > 1:
-        reason = split_reason[1]
-    else:
-        reason = ""
-
+    reason = split_reason[1] if len(split_reason) > 1 else ""
     mutetime = extract_time(message, time_val)
 
     if not mutetime:
         return ""
 
-    log = "<b>{}:</b>" \
-          "\n#TMUTE" \
-          "\n<b>Admin:</b> {}" \
-          "\n<b>User:</b> {}" \
-          "\n<b>Time:</b> {}".format(html.escape(chat.title), mention_html(user.id, user.first_name),
-                                     mention_html(member.user.id, member.user.first_name), time_val)
+    log = f"<b>{html.escape(chat.title)}:</b>\n#TMUTE\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\n<b>User:</b> {mention_html(member.user.id, member.user.first_name)}\n<b>Time:</b> {time_val}"
     if reason:
-        log += "\n<b>Reason:</b> {}".format(reason)
+        log += f"\n<b>Reason:</b> {reason}"
 
     try:
         if member.can_send_messages is None or member.can_send_messages:

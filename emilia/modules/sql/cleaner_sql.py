@@ -16,7 +16,7 @@ class CleanerBlueText(BASE):
         self.is_enable = is_enable
 
     def __repr__(self):
-        return "clean blue text for {}".format(self.chat_id)
+        return f"clean blue text for {self.chat_id}"
 
 
 CleanerBlueText.__table__.create(checkfirst=True)
@@ -34,15 +34,14 @@ def set_cleanbt(chat_id, is_enable):
         curr = SESSION.query(CleanerBlueText).get(str(chat_id))
         if curr:
             SESSION.delete(curr)
-        
+
         curr = CleanerBlueText(str(chat_id), is_enable)
 
         if is_enable:
             if str(chat_id) not in CLEANER_BT_CHATS:
                 CLEANER_BT_CHATS.append(str(chat_id))
-        else:
-            if str(chat_id) in CLEANER_BT_CHATS:
-                CLEANER_BT_CHATS.remove(str(chat_id))
+        elif str(chat_id) in CLEANER_BT_CHATS:
+            CLEANER_BT_CHATS.remove(str(chat_id))
 
         SESSION.add(curr)
         SESSION.commit()

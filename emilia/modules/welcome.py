@@ -45,10 +45,7 @@ ENUM_FUNC_MAP = {
 def send(update, message, keyboard, backup_message):
 	chat = update.effective_chat
 	cleanserv = sql.clean_service(chat.id)
-	reply = update.message.message_id
-	# Clean service welcome
-	if cleanserv:
-		reply = False
+	reply = False if cleanserv else update.message.message_id
 	try:
 		msg = dispatcher.bot.send_message(chat.id, message, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard, reply_to_message_id=reply, disable_web_page_preview=True)
 	except IndexError:

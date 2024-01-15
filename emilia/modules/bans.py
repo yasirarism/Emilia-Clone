@@ -66,16 +66,22 @@ def ban(bot: Bot, update: Update, args: List[str]) -> str:
         else:
             member = chat.get_member(user_id)
     except BadRequest as excp:
-        if excp.message == "User not found":
-            if conn:
-                text = tl(update.effective_message, "Saya tidak dapat menemukan pengguna ini pada *{}* 😣").format(chat_name)
-            else:
-                text = tl(update.effective_message, "Saya tidak dapat menemukan pengguna ini 😣")
-            send_message(update.effective_message, text, parse_mode="markdown")
-            return ""
-        else:
+        if excp.message != "User not found":
             raise
 
+        text = (
+            tl(
+                update.effective_message,
+                "Saya tidak dapat menemukan pengguna ini pada *{}* 😣",
+            ).format(chat_name)
+            if conn
+            else tl(
+                update.effective_message,
+                "Saya tidak dapat menemukan pengguna ini 😣",
+            )
+        )
+        send_message(update.effective_message, text, parse_mode="markdown")
+        return ""
     if user_id == bot.id:
         send_message(update.effective_message, tl(update.effective_message, "Saya tidak akan BAN diri saya sendiri, apakah kamu gila? 😠"))
         return ""
@@ -92,15 +98,9 @@ def ban(bot: Bot, update: Update, args: List[str]) -> str:
         send_message(update.effective_message, text, parse_mode="markdown")
         return ""
 
-    log = "<b>{}:</b>" \
-          "\n#BANNED" \
-          "\n<b>Admin:</b> {}" \
-          "\n<b>User:</b> {} (<code>{}</code>)".format(html.escape(chat.title),
-                                                       mention_html(user.id, user.first_name),
-                                                       mention_html(member.user.id, member.user.first_name),
-                                                       member.user.id)
+    log = f"<b>{html.escape(chat.title)}:</b>\n#BANNED\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\n<b>User:</b> {mention_html(member.user.id, member.user.first_name)} (<code>{member.user.id}</code>)"
     if reason:
-        log += "\n<b>Reason:</b> {}".format(reason)
+        log += f"\n<b>Reason:</b> {reason}"
 
     try:
         if conn:
@@ -121,9 +121,7 @@ def ban(bot: Bot, update: Update, args: List[str]) -> str:
             # Do not reply
             send_message(update.effective_message, tl(update.effective_message, "Terbanned! 😝"), quote=False)
             return log
-        elif excp.message == "Message can't be deleted":
-            pass
-        else:
+        elif excp.message != "Message can't be deleted":
             LOGGER.warning(update)
             LOGGER.exception("ERROR membanned pengguna %s di obrolan %s (%s) disebabkan oleh %s", user_id, chat.title, chat.id,
                              excp.message)
@@ -161,21 +159,17 @@ def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
         chat_name = update.effective_message.chat.title
 
     check = bot.getChatMember(chat_id, bot.id)
-    if check.status == 'member':
+    if (
+        check.status != 'member'
+        and check['can_restrict_members'] == False
+        or check.status == 'member'
+    ):
         if conn:
             text = tl(update.effective_message, "Saya tidak bisa membatasi orang di *{}*! Pastikan saya admin dan dapat menunjuk admin baru.").format(chat_name)
         else:
             text = tl(update.effective_message, "Saya tidak bisa membatasi orang di sini! Pastikan saya admin dan dapat menunjuk admin baru.")
         send_message(update.effective_message, text, parse_mode="markdown")
         return ""
-    else:
-        if check['can_restrict_members'] == False:
-            if conn:
-                text = tl(update.effective_message, "Saya tidak bisa membatasi orang di *{}*! Pastikan saya admin dan dapat menunjuk admin baru.").format(chat_name)
-            else:
-                text = tl(update.effective_message, "Saya tidak bisa membatasi orang di sini! Pastikan saya admin dan dapat menunjuk admin baru.")
-            send_message(update.effective_message, text, parse_mode="markdown")
-            return ""
 
     if not user_id:
         send_message(update.effective_message, tl(update.effective_message, "Anda sepertinya tidak mengacu pada pengguna."))
@@ -187,12 +181,11 @@ def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
         else:
             member = chat.get_member(user_id)
     except BadRequest as excp:
-        if excp.message == "User not found":
-            send_message(update.effective_message, tl(update.effective_message, "Saya tidak dapat menemukan pengguna ini 😣"))
-            return ""
-        else:
+        if excp.message != "User not found":
             raise
 
+        send_message(update.effective_message, tl(update.effective_message, "Saya tidak dapat menemukan pengguna ini 😣"))
+        return ""
     if user_id == bot.id:
         send_message(update.effective_message, tl(update.effective_message, "Saya tidak akan BAN diri saya sendiri, apakah kamu gila? 😠"))
         return ""
@@ -208,7 +201,7 @@ def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
     if not reason:
         send_message(update.effective_message, tl(update.effective_message, "Anda belum menetapkan waktu untuk banned pengguna ini!"))
         return ""
-    
+
     split_reason = reason.split(None, 1)
 
     time_val = split_reason[0].lower()
@@ -216,23 +209,15 @@ def temp_ban(bot: Bot, update: Update, args: List[str]) -> str:
         reason = split_reason[1]
     else:
         reason = ""
-        
+
         bantime = extract_time(message, time_val)
-        
+
         if not bantime:
             return ""
 
-    log = "<b>{}:</b>" \
-          "\n#TEMPBAN" \
-          "\n<b>Admin:</b> {}" \
-          "\n<b>User:</b> {} (<code>{}</code>)" \
-          "\n<b>Time:</b> {}".format(html.escape(chat.title),
-                                     mention_html(user.id, user.first_name),
-                                     mention_html(member.user.id, member.user.first_name),
-                                     member.user.id,
-                                     time_val)
+    log = f"<b>{html.escape(chat.title)}:</b>\n#TEMPBAN\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\n<b>User:</b> {mention_html(member.user.id, member.user.first_name)} (<code>{member.user.id}</code>)\n<b>Time:</b> {time_val}"
     if reason:
-        log += "\n<b>Reason:</b> {}".format(reason)
+        log += f"\n<b>Reason:</b> {reason}"
 
     try:
         if conn:

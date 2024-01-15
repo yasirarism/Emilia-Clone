@@ -20,4 +20,4 @@ def send_message(message, text,  *args,**kwargs):
 			try:
 				return message.reply_text(text, quote=False, *args,**kwargs)
 			except error.BadRequest as err:
-				print("ERROR: {}".format(err))
+				print(f"ERROR: {err}")

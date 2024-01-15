@@ -24,11 +24,7 @@ def afk(bot: Bot, update: Update):
         return
 
     args = update.effective_message.text.split(None, 1)
-    if len(args) >= 2:
-        reason = args[1]
-    else:
-        reason = ""
-
+    reason = args[1] if len(args) >= 2 else ""
     sql.set_afk(update.effective_user.id, reason)
     send_message(update.effective_message, tl(update.effective_message, "{} sekarang AFK!").format(update.effective_user.first_name))
 
@@ -40,8 +36,7 @@ def no_longer_afk(bot: Bot, update: Update):
     if not user:  # ignore channels
         return
 
-    res = sql.rm_afk(user.id)
-    if res:
+    if res := sql.rm_afk(user.id):
         send_message(update.effective_message, tl(update.effective_message, "{} sudah tidak AFK!").format(update.effective_user.first_name))
 
 
@@ -55,7 +50,7 @@ def reply_afk(bot: Bot, update: Update):
             if ent.type == MessageEntity.TEXT_MENTION:
                 user_id = ent.user.id
                 fst_name = ent.user.first_name
-                
+
             elif ent.type == MessageEntity.MENTION:
                 user_id = get_user_id(message.text[ent.offset:ent.offset + ent.length])
                 if not user_id:
@@ -64,10 +59,10 @@ def reply_afk(bot: Bot, update: Update):
                 try:
                     chat = bot.get_chat(user_id)
                 except BadRequest:
-                    print("Error: Could not fetch userid {} for AFK module".format(user_id))
+                    print(f"Error: Could not fetch userid {user_id} for AFK module")
                     return
                 fst_name = chat.first_name
-                
+
             else:   
                 return
 

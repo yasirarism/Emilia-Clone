@@ -47,9 +47,9 @@ def list_handlers(bot: Bot, update: Update):
 	spam = spamfilters(update.effective_message.text, update.effective_message.from_user.id, update.effective_chat.id, update.effective_message)
 	if spam == True:
 		return
-	
+
 	conn = connected(bot, update, chat, user.id, need_admin=False)
-	if not conn == False:
+	if conn != False:
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
 		filter_list = "*Filter di {}:*\n"
@@ -70,7 +70,7 @@ def list_handlers(bot: Bot, update: Update):
 		return
 
 	for keyword in all_handlers:
-		entry = " - {}\n".format(escape_markdown(keyword))
+		entry = f" - {escape_markdown(keyword)}\n"
 		if len(entry) + len(filter_list) > telegram.MAX_MESSAGE_LENGTH:
 			send_message(update.effective_message, filter_list.format(chat_name), parse_mode=telegram.ParseMode.MARKDOWN)
 			filter_list = entry
@@ -93,7 +93,7 @@ def filters(bot: Bot, update: Update):
 		return
 
 	conn = connected(bot, update, chat, user.id)
-	if not conn == False:
+	if conn != False:
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
 	else:
@@ -119,7 +119,7 @@ def filters(bot: Bot, update: Update):
 			return
 		# set trigger -> lower, so as to avoid adding duplicate filters with different cases
 		keyword = extracted[0].lower()
-	
+
 
 	# Add the filter
 	# Note: perhaps handlers can be removed somehow using sql.get_chat_filters
@@ -189,7 +189,7 @@ def stop_filter(bot: Bot, update: Update):
 		return
 
 	conn = connected(bot, update, chat, user.id)
-	if not conn == False:
+	if conn != False:
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
 	else:
@@ -247,74 +247,66 @@ def reply_filter(bot: Bot, update: Update):
 							try:
 								bot.send_message(chat.id, filt.reply_text, parse_mode="markdown", disable_web_page_preview=True, reply_markup=keyboard)
 							except BadRequest as excp:
-								LOGGER.exception("Gagal mengirim pesan: " + excp.message)
+								LOGGER.exception(f"Gagal mengirim pesan: {excp.message}")
 								send_message(update.effective_message, tl(update.effective_message, get_exception(excp, filt, chat)))
-								pass
 						else:
 							try:
 								send_message(update.effective_message, tl(update.effective_message, get_exception(excp, filt, chat)))
 							except BadRequest as excp:
-								LOGGER.exception("Gagal mengirim pesan: " + excp.message)
-								pass
+								LOGGER.exception(f"Gagal mengirim pesan: {excp.message}")
 				else:
 					ENUM_FUNC_MAP[filt.file_type](chat.id, filt.file_id, caption=filt.reply_text, reply_to_message_id=message.message_id, parse_mode="markdown", disable_web_page_preview=True, reply_markup=keyboard)
-				break
+			elif filt.is_sticker:
+				message.reply_sticker(filt.reply)
+			elif filt.is_document:
+				message.reply_document(filt.reply)
+			elif filt.is_image:
+				message.reply_photo(filt.reply)
+			elif filt.is_audio:
+				message.reply_audio(filt.reply)
+			elif filt.is_voice:
+				message.reply_voice(filt.reply)
+			elif filt.is_video:
+				message.reply_video(filt.reply)
+			elif filt.has_markdown:
+				buttons = sql.get_buttons(chat.id, filt.keyword)
+				keyb = build_keyboard(buttons)
+				keyboard = InlineKeyboardMarkup(keyb)
+
+				try:
+					send_message(update.effective_message, filt.reply, parse_mode=ParseMode.MARKDOWN,
+									   disable_web_page_preview=True,
+									   reply_markup=keyboard)
+				except BadRequest as excp:
+					if excp.message == "Unsupported url protocol":
+						try:
+							send_message(update.effective_message, tl(update.effective_message, "Anda tampaknya mencoba menggunakan protokol url yang tidak didukung. Telegram "
+											   "tidak mendukung tombol untuk beberapa protokol, seperti tg://. Silakan coba "
+											   "lagi."))
+						except BadRequest as excp:
+							LOGGER.exception(f"Gagal mengirim pesan: {excp.message}")
+					elif excp.message == "Reply message not found":
+						try:
+							bot.send_message(chat.id, filt.reply, parse_mode=ParseMode.MARKDOWN,
+											 disable_web_page_preview=True,
+											 reply_markup=keyboard)
+						except BadRequest as excp:
+							LOGGER.exception(f"Gagal mengirim pesan: {excp.message}")
+					else:
+						try:
+							send_message(update.effective_message, tl(update.effective_message, "Catatan ini tidak dapat dikirim karena formatnya salah."))
+						except BadRequest as excp:
+							LOGGER.exception(f"Gagal mengirim pesan: {excp.message}")
+						LOGGER.warning("Message %s could not be parsed", str(filt.reply))
+						LOGGER.exception("Could not parse filter %s in chat %s", str(filt.keyword), str(chat.id))
+
 			else:
-				if filt.is_sticker:
-					message.reply_sticker(filt.reply)
-				elif filt.is_document:
-					message.reply_document(filt.reply)
-				elif filt.is_image:
-					message.reply_photo(filt.reply)
-				elif filt.is_audio:
-					message.reply_audio(filt.reply)
-				elif filt.is_voice:
-					message.reply_voice(filt.reply)
-				elif filt.is_video:
-					message.reply_video(filt.reply)
-				elif filt.has_markdown:
-					buttons = sql.get_buttons(chat.id, filt.keyword)
-					keyb = build_keyboard(buttons)
-					keyboard = InlineKeyboardMarkup(keyb)
-
-					try:
-						send_message(update.effective_message, filt.reply, parse_mode=ParseMode.MARKDOWN,
-										   disable_web_page_preview=True,
-										   reply_markup=keyboard)
-					except BadRequest as excp:
-						if excp.message == "Unsupported url protocol":
-							try:
-								send_message(update.effective_message, tl(update.effective_message, "Anda tampaknya mencoba menggunakan protokol url yang tidak didukung. Telegram "
-												   "tidak mendukung tombol untuk beberapa protokol, seperti tg://. Silakan coba "
-												   "lagi."))
-							except BadRequest as excp:
-								LOGGER.exception("Gagal mengirim pesan: " + excp.message)
-								pass
-						elif excp.message == "Reply message not found":
-							try:
-								bot.send_message(chat.id, filt.reply, parse_mode=ParseMode.MARKDOWN,
-												 disable_web_page_preview=True,
-												 reply_markup=keyboard)
-							except BadRequest as excp:
-								LOGGER.exception("Gagal mengirim pesan: " + excp.message)
-								pass
-						else:
-							try:
-								send_message(update.effective_message, tl(update.effective_message, "Catatan ini tidak dapat dikirim karena formatnya salah."))
-							except BadRequest as excp:
-								LOGGER.exception("Gagal mengirim pesan: " + excp.message)
-								pass
-							LOGGER.warning("Message %s could not be parsed", str(filt.reply))
-							LOGGER.exception("Could not parse filter %s in chat %s", str(filt.keyword), str(chat.id))
-
-				else:
 					# LEGACY - all new filters will have has_markdown set to True.
-					try:
-						send_message(update.effective_message, filt.reply)
-					except BadRequest as excp:
-						LOGGER.exception("Gagal mengirim pesan: " + excp.message)
-						pass
-				break
+				try:
+					send_message(update.effective_message, filt.reply)
+				except BadRequest as excp:
+					LOGGER.exception(f"Gagal mengirim pesan: {excp.message}")
+			break
 
 
 def get_exception(excp, filt, chat):

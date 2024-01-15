@@ -70,7 +70,7 @@ def list_urls(bot, update):
     final_content = "\n\n".join(links_list)
 
     # check if the length of the message is too long to be posted in 1 chat bubble
-    if len(final_content) == 0:
+    if not final_content:
         bot.send_message(chat_id=tg_chat_id, text=tl(update.effective_message, "Obrolan ini tidak berlangganan ke tautan apa pun"))
     elif len(final_content) <= constants.MAX_MESSAGE_LENGTH:
         bot.send_message(chat_id=tg_chat_id, text=tl(update.effective_message, "Obrolan ini dilanggan ke tautan berikut:\n") + final_content)
@@ -100,11 +100,7 @@ def add_url(bot, update, args):
             else:
                 tg_old_entry_link = ""
 
-            # gather the row which contains exactly that telegram group ID and link for later comparison
-            row = sql.check_url_availability(tg_chat_id, tg_feed_link)
-
-            # check if there's an entry already added to DB by the same user in the same group with the same link
-            if row:
+            if row := sql.check_url_availability(tg_chat_id, tg_feed_link):
                 send_message(update.effective_message, tl(update.effective_message, "URL ini sudah ditambahkan"))
             else:
                 sql.add_url(tg_chat_id, tg_feed_link, tg_old_entry_link)
@@ -129,9 +125,9 @@ def remove_url(bot, update, args):
         link_processed = parse(tg_feed_link)
 
         if link_processed.bozo == 0:
-            user_data = sql.check_url_availability(tg_chat_id, tg_feed_link)
-
-            if user_data:
+            if user_data := sql.check_url_availability(
+                tg_chat_id, tg_feed_link
+            ):
                 sql.remove_url(tg_chat_id, tg_feed_link)
 
                 send_message(update.effective_message, tl(update.effective_message, "URL dihapus dari langganan"))
@@ -161,23 +157,18 @@ def rss_update(bot, job):
 
         # this loop checks for every entry from the RSS Feed link from the DB row
         for entry in feed_processed.entries:
-            # check if there are any new updates to the RSS Feed from the old entry
-            if entry.link != tg_old_entry_link:
-                new_entry_links.append(entry.link)
-                new_entry_titles.append(entry.title)
-            else:
+            if entry.link == tg_old_entry_link:
                 break
 
+            new_entry_links.append(entry.link)
+            new_entry_titles.append(entry.title)
         # check if there's any new entries queued from the last check
         if new_entry_links:
             sql.update_url(row_id, new_entry_links)
-        else:
-            pass
-
         if len(new_entry_links) < 5:
             # this loop sends every new update to each user from each group based on the DB entries
             for link, title in zip(reversed(new_entry_links), reversed(new_entry_titles)):
-                final_message = "<b>{}</b>\n\n{}".format(html.escape(title), html.escape(link))
+                final_message = f"<b>{html.escape(title)}</b>\n\n{html.escape(link)}"
 
                 if len(final_message) <= constants.MAX_MESSAGE_LENGTH:
                     try:
@@ -194,7 +185,7 @@ def rss_update(bot, job):
                         sql.remove_url(tg_chat_id, tg_feed_link)
         else:
             for link, title in zip(reversed(new_entry_links[-5:]), reversed(new_entry_titles[-5:])):
-                final_message = "<b>{}</b>\n\n{}".format(html.escape(title), html.escape(link))
+                final_message = f"<b>{html.escape(title)}</b>\n\n{html.escape(link)}"
 
                 if len(final_message) <= constants.MAX_MESSAGE_LENGTH:
                     try:
@@ -221,7 +212,6 @@ def rss_set(bot, job):
 
     # this loop checks for every row in the DB
     for row in user_data:
-        row_id = row.id
         tg_feed_link = row.feed_link
         tg_old_entry_link = row.old_entry_link
 
@@ -241,9 +231,8 @@ def rss_set(bot, job):
 
         # check if there's any new entries queued from the last check
         if new_entry_links:
+            row_id = row.id
             sql.update_url(row_id, new_entry_links)
-        else:
-            pass
 
 
 __help__ = "rss_help"

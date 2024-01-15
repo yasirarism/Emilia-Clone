@@ -23,25 +23,23 @@ from emilia.modules.helper_funcs.alternate import send_message
 @run_async
 def allow_connections(bot: Bot, update: Update, args: List[str]) -> str:
     chat = update.effective_chat  # type: Optional[Chat]
-    if chat.type != chat.PRIVATE:
-        if len(args) >= 1:
-            var = args[0]
-            if (var == "no" or var == "tidak"):
-                sql.set_allow_connect_to_chat(chat.id, False)
-                send_message(update.effective_message, languages.tl(update.effective_message, "Sambungan telah dinonaktifkan untuk obrolan ini"))
-            elif(var == "yes" or var == "ya"):
-                sql.set_allow_connect_to_chat(chat.id, True)
-                send_message(update.effective_message, languages.tl(update.effective_message, "Koneksi di aktifkan untuk obrolan ini"))
-            else:
-                send_message(update.effective_message, languages.tl(update.effective_message, "Silakan masukkan `ya`/`yes` atau `tidak`/`no`!"), parse_mode=ParseMode.MARKDOWN)
-        else:
-            get_settings = sql.allow_connect_to_chat(chat.id)
-            if get_settings:
-                send_message(update.effective_message, languages.tl(update.effective_message, "Koneksi pada grup ini di *Di Izinkan* untuk member!"), parse_mode=ParseMode.MARKDOWN)
-            else:
-                send_message(update.effective_message, languages.tl(update.effective_message, "Koneksi pada grup ini di *Tidak Izinkan* untuk member!"), parse_mode=ParseMode.MARKDOWN)
-    else:
+    if chat.type == chat.PRIVATE:
         send_message(update.effective_message, languages.tl(update.effective_message, "Anda bisa lakukan command ini pada grup, bukan pada PM"))
+
+    elif args:
+        var = args[0]
+        if var in ["no", "tidak"]:
+            sql.set_allow_connect_to_chat(chat.id, False)
+            send_message(update.effective_message, languages.tl(update.effective_message, "Sambungan telah dinonaktifkan untuk obrolan ini"))
+        elif var in ["yes", "ya"]:
+            sql.set_allow_connect_to_chat(chat.id, True)
+            send_message(update.effective_message, languages.tl(update.effective_message, "Koneksi di aktifkan untuk obrolan ini"))
+        else:
+            send_message(update.effective_message, languages.tl(update.effective_message, "Silakan masukkan `ya`/`yes` atau `tidak`/`no`!"), parse_mode=ParseMode.MARKDOWN)
+    elif get_settings := sql.allow_connect_to_chat(chat.id):
+        send_message(update.effective_message, languages.tl(update.effective_message, "Koneksi pada grup ini di *Di Izinkan* untuk member!"), parse_mode=ParseMode.MARKDOWN)
+    else:
+        send_message(update.effective_message, languages.tl(update.effective_message, "Koneksi pada grup ini di *Tidak Izinkan* untuk member!"), parse_mode=ParseMode.MARKDOWN)
 
 @run_async
 def connection_chat(bot, update):
@@ -100,13 +98,13 @@ def connect_chat(bot, update, args):
             ismember = getstatusadmin.status in ('member')
             isallow = sql.allow_connect_to_chat(connect_chat)
             if (isadmin) or (isallow and ismember) or (user.id in SUDO_USERS):
-                connection_status = sql.connect(update.effective_message.from_user.id, connect_chat)
-                if connection_status:
+                if connection_status := sql.connect(
+                    update.effective_message.from_user.id, connect_chat
+                ):
                     conn_chat = dispatcher.bot.getChat(connected(bot, update, chat, user.id, need_admin=False))
                     chat_name = conn_chat.title
                     send_message(update.effective_message, languages.tl(update.effective_message, "Berhasil tersambung ke *{}*. Gunakan /connection untuk informasi perintah apa saja yang tersedia.").format(chat_name), parse_mode=ParseMode.MARKDOWN)
                     sql.add_history_conn(user.id, str(conn_chat.id), chat_name)
-                    # send_message(update.effective_message, languages.tl(update.effective_message, "supportcmd"), parse_mode="markdown")
                 else:
                     send_message(update.effective_message, languages.tl(update.effective_message, "Koneksi gagal!"))
             else:
@@ -117,8 +115,7 @@ def connect_chat(bot, update, args):
                 buttons = [InlineKeyboardButton(text=languages.tl(update.effective_message, "❎ Close button"), callback_data="connect_close"), InlineKeyboardButton(text=languages.tl(update.effective_message, "🧹 Hapus riwayat"), callback_data="connect_clear")]
             else:
                 buttons = []
-            conn = connected(bot, update, chat, user.id, need_admin=False)
-            if conn:
+            if conn := connected(bot, update, chat, user.id, need_admin=False):
                 connectedchat = dispatcher.bot.getChat(conn)
                 text = languages.tl(update.effective_message, "Anda telah terkoneksi pada *{}* (`{}`)").format(connectedchat.title, conn)
                 buttons.append(InlineKeyboardButton(text=languages.tl(update.effective_message, "🔌 Putuskan sambungan"), callback_data="connect_disconnect"))
@@ -132,10 +129,17 @@ def connect_chat(bot, update, args):
                 buttons = [buttons]
                 for x in sorted(gethistory.keys(), reverse=True):
                     htime = time.strftime("%d/%m/%Y", time.localtime(x))
-                    text += "╞═「 *{}* 」\n│   `{}`\n│   `{}`\n".format(gethistory[x]['chat_name'], gethistory[x]['chat_id'], htime)
+                    text += f"╞═「 *{gethistory[x]['chat_name']}* 」\n│   `{gethistory[x]['chat_id']}`\n│   `{htime}`\n"
                     text += "│\n"
-                    buttons.append([InlineKeyboardButton(text=gethistory[x]['chat_name'], callback_data="connect({})".format(gethistory[x]['chat_id']))])
-                text += "╘══「 Total {} Chats 」".format(str(len(gethistory)) + " (max)" if len(gethistory) == 5 else str(len(gethistory)))
+                    buttons.append(
+                        [
+                            InlineKeyboardButton(
+                                text=gethistory[x]['chat_name'],
+                                callback_data=f"connect({gethistory[x]['chat_id']})",
+                            )
+                        ]
+                    )
+                text += f'╘══「 Total {f"{len(gethistory)} (max)" if len(gethistory) == 5 else str(len(gethistory))} Chats 」'
                 conn_hist = InlineKeyboardMarkup(buttons)
             elif buttons:
                 conn_hist = InlineKeyboardMarkup([buttons])
@@ -149,8 +153,9 @@ def connect_chat(bot, update, args):
         ismember = getstatusadmin.status in ('member')
         isallow = sql.allow_connect_to_chat(chat.id)
         if (isadmin) or (isallow and ismember) or (user.id in SUDO_USERS):
-            connection_status = sql.connect(update.effective_message.from_user.id, chat.id)
-            if connection_status:
+            if connection_status := sql.connect(
+                update.effective_message.from_user.id, chat.id
+            ):
                 chat_name = dispatcher.bot.getChat(chat.id).title
                 send_message(update.effective_message, languages.tl(update.effective_message, "Berhasil tersambung ke *{}*.").format(chat_name), parse_mode=ParseMode.MARKDOWN)
                 try:
@@ -172,11 +177,12 @@ def disconnect_chat(bot, update):
         return
 
     if update.effective_chat.type == 'private':
-        disconnection_status = sql.disconnect(update.effective_message.from_user.id)
-        if disconnection_status:
-           sql.disconnected_chat = send_message(update.effective_message, languages.tl(update.effective_message, "Terputus dari obrolan!"))
+        if disconnection_status := sql.disconnect(
+            update.effective_message.from_user.id
+        ):
+            sql.disconnected_chat = send_message(update.effective_message, languages.tl(update.effective_message, "Terputus dari obrolan!"))
         else:
-           send_message(update.effective_message, languages.tl(update.effective_message, "Anda tidak terkoneksi!"))
+            send_message(update.effective_message, languages.tl(update.effective_message, "Anda tidak terkoneksi!"))
     else:
         send_message(update.effective_message, languages.tl(update.effective_message, "Penggunaan terbatas hanya untuk PM"))
 
@@ -186,28 +192,24 @@ def connected(bot, update, chat, user_id, need_admin=True):
     spam = spamfilters(update.effective_message.text, update.effective_message.from_user.id, update.effective_chat.id, update.effective_message)
     if spam == True:
         return
-        
-    if chat.type == chat.PRIVATE and sql.get_connected_chat(user_id):
-        conn_id = sql.get_connected_chat(user_id).chat_id
-        getstatusadmin = bot.get_chat_member(conn_id, update.effective_message.from_user.id)
-        isadmin = getstatusadmin.status in ('administrator', 'creator')
-        ismember = getstatusadmin.status in ('member')
-        isallow = sql.allow_connect_to_chat(conn_id)
-        if (isadmin) or (isallow and ismember) or (user.id in SUDO_USERS):
-            if need_admin == True:
-                if getstatusadmin.status in ('administrator', 'creator') or user_id in SUDO_USERS:
-                    return conn_id
-                else:
-                    send_message(update.effective_message, languages.tl(update.effective_message, "Anda harus menjadi admin dalam grup yang terhubung!"))
-                    raise Exception("Bukan admin!")
-            else:
-                return conn_id
-        else:
-            send_message(update.effective_message, languages.tl(update.effective_message, "Grup mengubah koneksi hak atau Anda bukan admin lagi.\nSaya putuskan koneksi Anda."))
-            disconnect_chat(bot, update)
-            raise Exception("Bukan admin!")
-    else:
+
+    if chat.type != chat.PRIVATE or not sql.get_connected_chat(user_id):
         return False
+    conn_id = sql.get_connected_chat(user_id).chat_id
+    getstatusadmin = bot.get_chat_member(conn_id, update.effective_message.from_user.id)
+    isadmin = getstatusadmin.status in ('administrator', 'creator')
+    ismember = getstatusadmin.status in ('member')
+    isallow = sql.allow_connect_to_chat(conn_id)
+    if (isadmin) or (isallow and ismember) or (user.id in SUDO_USERS):
+        if need_admin != True:
+            return conn_id
+        if getstatusadmin.status in ('administrator', 'creator') or user_id in SUDO_USERS:
+            return conn_id
+        send_message(update.effective_message, languages.tl(update.effective_message, "Anda harus menjadi admin dalam grup yang terhubung!"))
+    else:
+        send_message(update.effective_message, languages.tl(update.effective_message, "Grup mengubah koneksi hak atau Anda bukan admin lagi.\nSaya putuskan koneksi Anda."))
+        disconnect_chat(bot, update)
+    raise Exception("Bukan admin!")
 
 @run_async
 def help_connect_chat(bot, update, args):
@@ -241,8 +243,9 @@ def connect_button(bot: Bot, update: Update) -> str:
         ismember = getstatusadmin.status in ('member')
         isallow = sql.allow_connect_to_chat(target_chat)
         if (isadmin) or (isallow and ismember) or (user.id in SUDO_USERS):
-            connection_status = sql.connect(query.from_user.id, target_chat)
-            if connection_status:
+            if connection_status := sql.connect(
+                query.from_user.id, target_chat
+            ):
                 conn_chat = dispatcher.bot.getChat(connected(bot, update, chat, user.id, need_admin=False))
                 chat_name = conn_chat.title
                 query.message.edit_text(languages.tl(update.effective_message, "Berhasil tersambung ke *{}*. Gunakan /connection untuk informasi perintah apa saja yang tersedia.").format(chat_name), parse_mode=ParseMode.MARKDOWN)
@@ -252,11 +255,10 @@ def connect_button(bot: Bot, update: Update) -> str:
         else:
             bot.answer_callback_query(query.id, languages.tl(update.effective_message, "Sambungan ke obrolan ini tidak diizinkan!"), show_alert=True)
     elif disconnect_match:
-        disconnection_status = sql.disconnect(query.from_user.id)
-        if disconnection_status:
-           sql.disconnected_chat = query.message.edit_text(languages.tl(update.effective_message, "Terputus dari obrolan!"))
+        if disconnection_status := sql.disconnect(query.from_user.id):
+            sql.disconnected_chat = query.message.edit_text(languages.tl(update.effective_message, "Terputus dari obrolan!"))
         else:
-           bot.answer_callback_query(query.id, languages.tl(update.effective_message, "Anda tidak terkoneksi!"), show_alert=True)
+            bot.answer_callback_query(query.id, languages.tl(update.effective_message, "Anda tidak terkoneksi!"), show_alert=True)
     elif clear_match:
         sql.clear_history_conn(query.from_user.id)
         query.message.edit_text(languages.tl(update.effective_message, "Riwayat yang terhubung telah dihapus!"))

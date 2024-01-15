@@ -66,18 +66,12 @@ def check_flood(bot: Bot, update: Update) -> str:
         send_message(update.effective_message, tl(update.effective_message, "Saya tidak suka orang yang mengirim pesan beruntun. Tapi kamu hanya membuat "
                        "saya kecewa. {}").format(execstrings))
 
-        return "<b>{}:</b>" \
-               "\n#{}" \
-               "\n<b>User:</b> {}" \
-               "\nFlooded the group.".format(tag, html.escape(chat.title),
-                                             mention_html(user.id, user.first_name))
+        return f"<b>{tag}:</b>\n#{html.escape(chat.title)}\n<b>User:</b> {mention_html(user.id, user.first_name)}\nFlooded the group."
 
     except BadRequest:
         send_message(update.effective_message, tl(update.effective_message, "Saya tidak bisa menendang orang di sini, beri saya izin terlebih dahulu! Sampai saat itu, saya akan menonaktifkan antiflood."))
         sql.set_flood(chat.id, 0)
-        return "<b>{}:</b>" \
-               "\n#INFO" \
-               "\n{}".format(chat.title, tl(update.effective_message, "Tidak memiliki izin kick, jadi secara otomatis menonaktifkan antiflood."))
+        return f'<b>{chat.title}:</b>\n#INFO\n{tl(update.effective_message, "Tidak memiliki izin kick, jadi secara otomatis menonaktifkan antiflood.")}'
 
 
 @run_async
@@ -102,9 +96,9 @@ def set_flood(bot: Bot, update: Update, args: List[str]) -> str:
         chat_id = update.effective_chat.id
         chat_name = update.effective_message.chat.title
 
-    if len(args) >= 1:
+    if args:
         val = args[0].lower()
-        if val == "off" or val == "no" or val == "0":
+        if val in ["off", "no", "0"]:
             sql.set_flood(chat_id, 0)
             if conn:
                 text = tl(update.effective_message, "Antiflood telah dinonaktifkan di *{}*.").format(chat_name)
@@ -120,10 +114,7 @@ def set_flood(bot: Bot, update: Update, args: List[str]) -> str:
                     text = tl(update.effective_message, "Antiflood telah dinonaktifkan di *{}*.").format(chat_name)
                 else:
                     text = tl(update.effective_message, "Antiflood telah dinonaktifkan.")
-                return "<b>{}:</b>" \
-                       "\n#SETFLOOD" \
-                       "\n<b>Admin:</b> {}" \
-                       "\nDisable antiflood.".format(html.escape(chat_name), mention_html(user.id, user.first_name))
+                return f"<b>{html.escape(chat_name)}:</b>\n#SETFLOOD\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\nDisable antiflood."
 
             elif amount < 3:
                 send_message(update.effective_message, tl(update.effective_message, "Antiflood harus baik 0 (dinonaktifkan), atau nomor lebih besar dari 3!"))
@@ -136,11 +127,7 @@ def set_flood(bot: Bot, update: Update, args: List[str]) -> str:
                 else:
                     text = tl(update.effective_message, "Antiflood telah diperbarui dan diatur menjadi *{}*").format(amount)
                 send_message(update.effective_message, text, parse_mode="markdown")
-                return "<b>{}:</b>" \
-                       "\n#SETFLOOD" \
-                       "\n<b>Admin:</b> {}" \
-                       "\nSet antiflood to <code>{}</code>.".format(html.escape(chat_name),
-                                                                    mention_html(user.id, user.first_name), amount)
+                return f"<b>{html.escape(chat_name)}:</b>\n#SETFLOOD\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\nSet antiflood to <code>{amount}</code>."
 
         else:
             send_message(update.effective_message, tl(update.effective_message, "Argumen tidak dikenal - harap gunakan angka, 'off', atau 'no'."))
@@ -170,17 +157,22 @@ def flood(bot: Bot, update: Update):
 
     limit = sql.get_flood_limit(chat_id)
     if limit == 0:
-        if conn:
-            text = tl(update.effective_message, "Saat ini saya tidak memberlakukan pengendalian pesan beruntun pada *{}*!").format(chat_name)
-        else:
-            text = tl(update.effective_message, "Saat ini saya tidak memberlakukan pengendalian pesan beruntun")
-        send_message(update.effective_message, text, parse_mode="markdown")
+        text = (
+            tl(
+                update.effective_message,
+                "Saat ini saya tidak memberlakukan pengendalian pesan beruntun pada *{}*!",
+            ).format(chat_name)
+            if conn
+            else tl(
+                update.effective_message,
+                "Saat ini saya tidak memberlakukan pengendalian pesan beruntun",
+            )
+        )
+    elif conn:
+        text = tl(update.effective_message, "Saat ini saya melarang pengguna jika mereka mengirim lebih dari *{}* pesan berturut-turut pada *{}*.").format(limit, chat_name)
     else:
-        if conn:
-            text = tl(update.effective_message, "Saat ini saya melarang pengguna jika mereka mengirim lebih dari *{}* pesan berturut-turut pada *{}*.").format(limit, chat_name)
-        else:
-            text = tl(update.effective_message, "Saat ini saya melarang pengguna jika mereka mengirim lebih dari *{}* pesan berturut-turut.").format(limit)
-        send_message(update.effective_message, text, parse_mode="markdown")
+        text = tl(update.effective_message, "Saat ini saya melarang pengguna jika mereka mengirim lebih dari *{}* pesan berturut-turut.").format(limit)
+    send_message(update.effective_message, text, parse_mode="markdown")
 
 
 @run_async
@@ -242,10 +234,7 @@ Contoh nilai waktu: 4m = 4 menit, 3h = 3 jam, 6d = 6 hari, 5w = 5 minggu.""")
         else:
             text = tl(update.effective_message, "Terlalu banyak mengirim pesan sekarang akan menghasilkan `{}`!").format(settypeflood)
         send_message(update.effective_message, text, parse_mode="markdown")
-        return "<b>{}:</b>\n" \
-                "<b>Admin:</b> {}\n" \
-                "Has changed antiflood mode. User will {}.".format(settypeflood, html.escape(chat.title),
-                                                                            mention_html(user.id, user.first_name))
+        return f"<b>{settypeflood}:</b>\n<b>Admin:</b> {html.escape(chat.title)}\nHas changed antiflood mode. User will {mention_html(user.id, user.first_name)}."
     else:
         getmode, getvalue = sql.get_flood_setting(chat.id)
         if getmode == 1:

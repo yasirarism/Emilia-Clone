@@ -30,7 +30,7 @@ def report_setting(bot: Bot, update: Update, args: List[str]):
 	msg = update.effective_message  # type: Optional[Message]
 
 	if chat.type == chat.PRIVATE:
-		if len(args) >= 1:
+		if args:
 			if args[0] in ("yes", "on"):
 				sql.set_user_setting(chat.id, True)
 				send_message(update.effective_message, tl(update.effective_message, "Menghidupkan pelaporan! Anda akan diberi tahu setiap kali ada yang melaporkan sesuatu."))
@@ -42,19 +42,18 @@ def report_setting(bot: Bot, update: Update, args: List[str]):
 			send_message(update.effective_message, tl(update.effective_message, "Preferensi laporan Anda saat ini: `{}`").format(sql.user_should_report(chat.id)),
 						   parse_mode=ParseMode.MARKDOWN)
 
-	else:
-		if len(args) >= 1:
-			if args[0] in ("yes", "on"):
-				sql.set_chat_setting(chat.id, True)
-				send_message(update.effective_message, tl(update.effective_message, "Menghidupkan pelaporan! Admin yang telah mengaktifkan laporan akan diberi tahu ketika seseorang menyebut /report "
-							   "atau @admin."))
+	elif args:
+		if args[0] in ("yes", "on"):
+			sql.set_chat_setting(chat.id, True)
+			send_message(update.effective_message, tl(update.effective_message, "Menghidupkan pelaporan! Admin yang telah mengaktifkan laporan akan diberi tahu ketika seseorang menyebut /report "
+						   "atau @admin."))
 
-			elif args[0] in ("no", "off"):
-				sql.set_chat_setting(chat.id, False)
-				send_message(update.effective_message, tl(update.effective_message, "Mematikan pelaporan! Tidak ada admin yang akan diberitahukan ketika seseorang menyebut /report atau @admin."))
-		else:
-			send_message(update.effective_message, tl(update.effective_message, "Pengaturan obrolan saat ini adalah: `{}`").format(sql.chat_should_report(chat.id)),
-						   parse_mode=ParseMode.MARKDOWN)
+		elif args[0] in ("no", "off"):
+			sql.set_chat_setting(chat.id, False)
+			send_message(update.effective_message, tl(update.effective_message, "Mematikan pelaporan! Tidak ada admin yang akan diberitahukan ketika seseorang menyebut /report atau @admin."))
+	else:
+		send_message(update.effective_message, tl(update.effective_message, "Pengaturan obrolan saat ini adalah: `{}`").format(sql.chat_should_report(chat.id)),
+					   parse_mode=ParseMode.MARKDOWN)
 
 
 @run_async
@@ -99,24 +98,52 @@ def report(bot: Bot, update: Update) -> str:
 			#link = ""
 
 		if chat.username:
-			chatlink = "https://t.me/{}/{}".format(chat.username, str(message.reply_to_message.message_id))
+			chatlink = f"https://t.me/{chat.username}/{str(message.reply_to_message.message_id)}"
 		else:
-			chatlink = "https://t.me/c/{}/{}".format(str(chat.id)[4:], str(message.reply_to_message.message_id))
+			chatlink = f"https://t.me/c/{str(chat.id)[4:]}/{str(message.reply_to_message.message_id)}"
 		keyboard = [
-			  [InlineKeyboardButton(tl(update.effective_message, "⚠️ Pesan yang dilaporkan"), url=chatlink)],
-			  [InlineKeyboardButton(tl(update.effective_message, "⚠️ Tendang"), callback_data="rp_{}=1={}".format(chat.id, reported_user.id)),
-			  InlineKeyboardButton(tl(update.effective_message, "⛔️ Banned"), callback_data="rp_{}=2={}".format(chat.id, reported_user.id))],
-			  [InlineKeyboardButton(tl(update.effective_message, "Hapus pesan"), callback_data="rp_{}=3={}".format(chat.id, message.reply_to_message.message_id))],
-			  [InlineKeyboardButton(tl(update.effective_message, "Tutup Tombol"), callback_data="rp_{}=4={}".format(chat.id, reported_user.id))]
-			]
+			[
+				InlineKeyboardButton(
+					tl(update.effective_message, "⚠️ Pesan yang dilaporkan"),
+					url=chatlink,
+				)
+			],
+			[
+				InlineKeyboardButton(
+					tl(update.effective_message, "⚠️ Tendang"),
+					callback_data=f"rp_{chat.id}=1={reported_user.id}",
+				),
+				InlineKeyboardButton(
+					tl(update.effective_message, "⛔️ Banned"),
+					callback_data=f"rp_{chat.id}=2={reported_user.id}",
+				),
+			],
+			[
+				InlineKeyboardButton(
+					tl(update.effective_message, "Hapus pesan"),
+					callback_data=f"rp_{chat.id}=3={message.reply_to_message.message_id}",
+				)
+			],
+			[
+				InlineKeyboardButton(
+					tl(update.effective_message, "Tutup Tombol"),
+					callback_data=f"rp_{chat.id}=4={reported_user.id}",
+				)
+			],
+		]
 		reply_markup = InlineKeyboardMarkup(keyboard)
 
 		should_forward = True
 		bot.send_message(chat.id, tl(update.effective_message, "<i>⚠️ Pesan telah di laporkan ke semua admin!</i>"), parse_mode=ParseMode.HTML, reply_to_message_id=message.message_id)
 
 		CURRENT_REPORT[str(chat.id)] = msg
-		CURRENT_REPORT[str(chat.id)+"key"] = reply_markup
-		CURRENT_REPORT[str(chat.id)+"user"] = {'name': reported_user.first_name, 'id': reported_user.id, 'rname': user.first_name, 'rid': user.id}
+		CURRENT_REPORT[f"{str(chat.id)}key"] = reply_markup
+		CURRENT_REPORT[f"{str(chat.id)}user"] = {
+			'name': reported_user.first_name,
+			'id': reported_user.id,
+			'rname': user.first_name,
+			'rid': user.id,
+		}
 		for admin in admin_list:
 			if admin.user.is_bot:  # can't message bots
 				continue
@@ -194,16 +221,24 @@ def button(bot, update):
 	report_method = splitter[1]
 	report_target = splitter[2]
 	msg = CURRENT_REPORT.get(str(report_chat))
-	userinfo = CURRENT_REPORT.get(str(report_chat)+"user")
-	key = CURRENT_REPORT.get(str(report_chat)+"key")
-	if msg == None or userinfo == None or key == None:
+	userinfo = CURRENT_REPORT.get(f"{str(report_chat)}user")
+	key = CURRENT_REPORT.get(f"{str(report_chat)}key")
+	if msg is None or userinfo is None or key is None:
 		query.message.edit_text(tl(update.effective_message, "Sesi telah berakhir!"))
 		return
 
 	if splitter[1] == "1":
 		keyboard = [
-			[InlineKeyboardButton(tl(update.effective_message, "Ya"), callback_data="ak_1+y|{}={}".format(report_chat, report_target)),
-			InlineKeyboardButton(tl(update.effective_message, "Tidak"), callback_data="ak_1+n|{}={}".format(report_chat, report_target))]
+			[
+				InlineKeyboardButton(
+					tl(update.effective_message, "Ya"),
+					callback_data=f"ak_1+y|{report_chat}={report_target}",
+				),
+				InlineKeyboardButton(
+					tl(update.effective_message, "Tidak"),
+					callback_data=f"ak_1+n|{report_chat}={report_target}",
+				),
+			]
 		]
 		reply_markup = InlineKeyboardMarkup(keyboard)
 		bot.edit_message_text(text=msg + tl(update.effective_message, "\n\nApakah anda yakin ingin menendang {}?").format(userinfo.get('name')),
@@ -212,8 +247,16 @@ def button(bot, update):
 						  reply_markup=reply_markup)
 	elif splitter[1] == "2":
 		keyboard = [
-			[InlineKeyboardButton(tl(update.effective_message, "Ya"), callback_data="ak_2+y|{}={}".format(report_chat, report_target)),
-			InlineKeyboardButton(tl(update.effective_message, "Tidak"), callback_data="ak_2+n|{}={}".format(report_chat, report_target))]
+			[
+				InlineKeyboardButton(
+					tl(update.effective_message, "Ya"),
+					callback_data=f"ak_2+y|{report_chat}={report_target}",
+				),
+				InlineKeyboardButton(
+					tl(update.effective_message, "Tidak"),
+					callback_data=f"ak_2+n|{report_chat}={report_target}",
+				),
+			]
 		]
 		reply_markup = InlineKeyboardMarkup(keyboard)
 		bot.edit_message_text(text=msg + tl(update.effective_message, "\n\nApakah anda yakin ingin banned {}?").format(userinfo.get('name')),
@@ -222,8 +265,16 @@ def button(bot, update):
 						  reply_markup=reply_markup)
 	elif splitter[1] == "3":
 		keyboard = [
-			[InlineKeyboardButton(tl(update.effective_message, "Ya"), callback_data="ak_3+y|{}={}".format(report_chat, report_target)),
-			InlineKeyboardButton(tl(update.effective_message, "Tidak"), callback_data="ak_3+n|{}={}".format(report_chat, report_target))]
+			[
+				InlineKeyboardButton(
+					tl(update.effective_message, "Ya"),
+					callback_data=f"ak_3+y|{report_chat}={report_target}",
+				),
+				InlineKeyboardButton(
+					tl(update.effective_message, "Tidak"),
+					callback_data=f"ak_3+n|{report_chat}={report_target}",
+				),
+			]
 		]
 		reply_markup = InlineKeyboardMarkup(keyboard)
 		bot.edit_message_text(text=msg + tl(update.effective_message, "\n\nHapus pesan?"),
@@ -236,9 +287,12 @@ def button(bot, update):
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id, parse_mode=ParseMode.HTML)
 		except Exception as err:
-			bot.edit_message_text(text=msg + "\n\nError: {}".format(err),
-						  chat_id=query.message.chat_id,
-						  message_id=query.message.message_id, parse_mode=ParseMode.HTML)
+			bot.edit_message_text(
+				text=f"{msg}\n\nError: {err}",
+				chat_id=query.message.chat_id,
+				message_id=query.message.message_id,
+				parse_mode=ParseMode.HTML,
+			)
 		"""
 		bot.edit_message_text(text="Chat: {}\nAction: {}\nUser: {}".format(splitter[0], splitter[1], splitter[2]),
 						  chat_id=query.message.chat_id,
@@ -253,8 +307,8 @@ def buttonask(bot, update):
 	report_target = splitter[1].split('|')[1].split('=')[1]
 	chat = update.effective_chat
 	msg = CURRENT_REPORT.get(str(report_chat))
-	userinfo = CURRENT_REPORT.get(str(report_chat)+"user")
-	key = CURRENT_REPORT.get(str(report_chat)+"key")
+	userinfo = CURRENT_REPORT.get(f"{str(report_chat)}user")
+	key = CURRENT_REPORT.get(f"{str(report_chat)}key")
 
 	if isyes == "y":
 		a, b = user_protection_checker(bot, report_target)
@@ -273,9 +327,12 @@ def buttonask(bot, update):
 							  chat_id=query.message.chat_id,
 							  message_id=query.message.message_id, parse_mode=ParseMode.HTML)
 			except Exception as err:
-				bot.edit_message_text(text=msg + "\n\nError: {}".format(err),
-							  chat_id=query.message.chat_id,
-							  message_id=query.message.message_id, parse_mode=ParseMode.HTML)
+				bot.edit_message_text(
+					text=f"{msg}\n\nError: {err}",
+					chat_id=query.message.chat_id,
+					message_id=query.message.message_id,
+					parse_mode=ParseMode.HTML,
+				)
 		elif splitter[0] == "2":
 			try:
 				bot.kickChatMember(report_chat, report_target)
@@ -286,9 +343,12 @@ def buttonask(bot, update):
 							  chat_id=query.message.chat_id,
 							  message_id=query.message.message_id, parse_mode=ParseMode.HTML)
 			except Exception as err:
-				bot.edit_message_text(text=msg + "\n\nError: {}".format(err),
-							  chat_id=query.message.chat_id,
-							  message_id=query.message.message_id, parse_mode=ParseMode.HTML)
+				bot.edit_message_text(
+					text=f"{msg}\n\nError: {err}",
+					chat_id=query.message.chat_id,
+					message_id=query.message.message_id,
+					parse_mode=ParseMode.HTML,
+				)
 		elif splitter[0] == "3":
 			try:
 				bot.deleteMessage(report_chat, report_target)
@@ -296,9 +356,12 @@ def buttonask(bot, update):
 							  chat_id=query.message.chat_id,
 							  message_id=query.message.message_id, parse_mode=ParseMode.HTML)
 			except Exception as err:
-				bot.edit_message_text(text=msg + "\n\nError: {}".format(err),
-							  chat_id=query.message.chat_id,
-							  message_id=query.message.message_id, parse_mode=ParseMode.HTML)
+				bot.edit_message_text(
+					text=f"{msg}\n\nError: {err}",
+					chat_id=query.message.chat_id,
+					message_id=query.message.message_id,
+					parse_mode=ParseMode.HTML,
+				)
 	elif isyes == "n":
 		bot.edit_message_text(text=msg,
 							  chat_id=query.message.chat_id,

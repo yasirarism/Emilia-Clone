@@ -71,8 +71,7 @@ if is_module_loaded(FILENAME):
         message = update.effective_message  # type: Optional[Message]
         chat = update.effective_chat  # type: Optional[Chat]
 
-        log_channel = sql.get_chat_log_channel(chat.id)
-        if log_channel:
+        if log_channel := sql.get_chat_log_channel(chat.id):
             log_channel_info = bot.get_chat(log_channel)
             send_message(update.effective_message, 
                 tl(update.effective_message, "Grup ini memiliki semua log yang dikirim ke: {} (`{}`)").format(escape_markdown(log_channel_info.title),
@@ -99,11 +98,9 @@ if is_module_loaded(FILENAME):
             try:
                 message.delete()
             except BadRequest as excp:
-                if excp.message == "Message to delete not found":
-                    pass
-                else:
+                if excp.message != "Message to delete not found":
                     LOGGER.exception("Error deleting message in log channel. Should work anyway though.")
-                    
+
             try:
                 bot.send_message(message.forward_from_chat.id,
                              tl(update.effective_message, "Saluran ini telah ditetapkan sebagai saluran log untuk {}.").format(
@@ -115,7 +112,7 @@ if is_module_loaded(FILENAME):
                     return
                 else:
                     LOGGER.exception("ERROR in setting the log channel.")
-                    
+
             bot.send_message(chat.id, tl(update.effective_message, "Berhasil mengatur saluran log!"))
 
         else:
@@ -134,8 +131,7 @@ if is_module_loaded(FILENAME):
         message = update.effective_message  # type: Optional[Message]
         chat = update.effective_chat  # type: Optional[Chat]
 
-        log_channel = sql.stop_chat_logging(chat.id)
-        if log_channel:
+        if log_channel := sql.stop_chat_logging(chat.id):
             bot.send_message(log_channel, tl(update.effective_message, "Channel telah dibatalkan tautannya {}").format(chat.title))
             send_message(update.effective_message, tl(update.effective_message, "Log saluran telah dinonaktifkan."))
 
@@ -152,8 +148,7 @@ if is_module_loaded(FILENAME):
 
 
     def __chat_settings__(chat_id, user_id):
-        log_channel = sql.get_chat_log_channel(chat_id)
-        if log_channel:
+        if log_channel := sql.get_chat_log_channel(chat_id):
             log_channel_info = dispatcher.bot.get_chat(log_channel)
             return tl(user_id, "Grup ini memiliki semua log yang dikirim ke: {} (`{}`)").format(escape_markdown(log_channel_info.title),
                                                                             log_channel)

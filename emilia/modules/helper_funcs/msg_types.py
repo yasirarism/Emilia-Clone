@@ -32,22 +32,14 @@ def get_note_type(msg: Message):
         offset = len(args[2]) - len(raw_text)  # set correct offset relative to command + notename
         text, buttons = button_markdown_parser(args[2], entities=msg.parse_entities() or msg.parse_caption_entities(),
                                                offset=offset)
-        if buttons:
-            data_type = Types.BUTTON_TEXT
-        else:
-            data_type = Types.TEXT
-
+        data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
     elif msg.reply_to_message:
         entities = msg.reply_to_message.parse_entities()
         msgtext = msg.reply_to_message.text or msg.reply_to_message.caption
         if len(args) >= 2 and msg.reply_to_message.text:  # not caption, text
             text, buttons = button_markdown_parser(msgtext,
                                                    entities=entities)
-            if buttons:
-                data_type = Types.BUTTON_TEXT
-            else:
-                data_type = Types.TEXT
-
+            data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
         elif msg.reply_to_message.sticker:
             content = msg.reply_to_message.sticker.file_id
             data_type = Types.STICKER
@@ -102,40 +94,41 @@ def get_welcome_type(msg: Message):
     except AttributeError:
         args = False
 
-    if msg.reply_to_message and msg.reply_to_message.sticker:
-        content = msg.reply_to_message.sticker.file_id
-        text = None
-        data_type = Types.STICKER
+    if msg.reply_to_message:
+        if msg.reply_to_message.sticker:
+            content = msg.reply_to_message.sticker.file_id
+            text = None
+            data_type = Types.STICKER
 
-    elif msg.reply_to_message and msg.reply_to_message.document:
-        content = msg.reply_to_message.document.file_id
-        text = msg.reply_to_message.caption
-        data_type = Types.DOCUMENT
+        elif msg.reply_to_message.document:
+            content = msg.reply_to_message.document.file_id
+            text = msg.reply_to_message.caption
+            data_type = Types.DOCUMENT
 
-    elif msg.reply_to_message and msg.reply_to_message.photo:
-        content = msg.reply_to_message.photo[-1].file_id  # last elem = best quality
-        text = msg.reply_to_message.caption
-        data_type = Types.PHOTO
+        elif msg.reply_to_message.photo:
+            content = msg.reply_to_message.photo[-1].file_id  # last elem = best quality
+            text = msg.reply_to_message.caption
+            data_type = Types.PHOTO
 
-    elif msg.reply_to_message and msg.reply_to_message.audio:
-        content = msg.reply_to_message.audio.file_id
-        text = msg.reply_to_message.caption
-        data_type = Types.AUDIO
+        elif msg.reply_to_message.audio:
+            content = msg.reply_to_message.audio.file_id
+            text = msg.reply_to_message.caption
+            data_type = Types.AUDIO
 
-    elif msg.reply_to_message and msg.reply_to_message.voice:
-        content = msg.reply_to_message.voice.file_id
-        text = msg.reply_to_message.caption
-        data_type = Types.VOICE
+        elif msg.reply_to_message.voice:
+            content = msg.reply_to_message.voice.file_id
+            text = msg.reply_to_message.caption
+            data_type = Types.VOICE
 
-    elif msg.reply_to_message and msg.reply_to_message.video:
-        content = msg.reply_to_message.video.file_id
-        text = msg.reply_to_message.caption
-        data_type = Types.VIDEO
+        elif msg.reply_to_message.video:
+            content = msg.reply_to_message.video.file_id
+            text = msg.reply_to_message.caption
+            data_type = Types.VIDEO
 
-    elif msg.reply_to_message and msg.reply_to_message.video_note:
-        content = msg.reply_to_message.video_note.file_id
-        text = None
-        data_type = Types.VIDEO_NOTE
+        elif msg.reply_to_message.video_note:
+            content = msg.reply_to_message.video_note.file_id
+            text = None
+            data_type = Types.VIDEO_NOTE
 
     buttons = []
     # determine what the contents of the filter are - text, image, sticker, etc
@@ -151,11 +144,8 @@ def get_welcome_type(msg: Message):
         text, buttons = button_markdown_parser(argumen, entities=entities, offset=offset)
 
     if not data_type:
-        if text and buttons:
-            data_type = Types.BUTTON_TEXT
-        elif text:
-            data_type = Types.TEXT
-
+        if text:
+            data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
     return text, data_type, content, buttons
 
 def get_message_type(msg: Message):
@@ -171,22 +161,14 @@ def get_message_type(msg: Message):
         offset = len(args[1]) - len(raw_text)  # set correct offset relative to command + notename
         text, buttons = button_markdown_parser(args[1], entities=msg.parse_entities() or msg.parse_caption_entities(),
                                                offset=offset)
-        if buttons:
-            data_type = Types.BUTTON_TEXT
-        else:
-            data_type = Types.TEXT
-
+        data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
     elif msg.reply_to_message:
         entities = msg.reply_to_message.parse_entities()
         msgtext = msg.reply_to_message.text or msg.reply_to_message.caption
         if len(args) >= 1 and msg.reply_to_message.text:  # not caption, text
             text, buttons = button_markdown_parser(msgtext,
                                                    entities=entities)
-            if buttons:
-                data_type = Types.BUTTON_TEXT
-            else:
-                data_type = Types.TEXT
-
+            data_type = Types.BUTTON_TEXT if buttons else Types.TEXT
         elif msg.reply_to_message.sticker:
             content = msg.reply_to_message.sticker.file_id
             data_type = Types.STICKER
