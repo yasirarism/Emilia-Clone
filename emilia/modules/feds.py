@@ -86,7 +86,7 @@ def new_fed(bot: Bot, update: Update):
 		send_message(update.effective_message, tl(update.effective_message, "Tolong tulis nama federasinya!"))
 		return
 	fednam = message.text.split(None, 1)[1]
-	if not fednam == '':
+	if fednam != '':
 		fed_id = str(uuid.uuid4())
 		fed_name = fednam
 		LOGGER.info(fed_id)
@@ -108,8 +108,11 @@ def new_fed(bot: Bot, update: Update):
 											"\n\nGunakan perintah di bawah ini untuk bergabung dengan federasi:"
 											"\n`/joinfed {}`").format(fed_name, fed_id, fed_id), parse_mode=ParseMode.MARKDOWN)
 		try:
-			bot.send_message(TEMPORARY_DATA,
-				"Federasi <b>{}</b> telah di buat dengan ID: <pre>{}</pre>".format(fed_name, fed_id), parse_mode=ParseMode.HTML)
+			bot.send_message(
+				TEMPORARY_DATA,
+				f"Federasi <b>{fed_name}</b> telah di buat dengan ID: <pre>{fed_id}</pre>",
+				parse_mode=ParseMode.HTML,
+			)
 		except:
 			LOGGER.warning("Cannot send a message to TEMPORARY_DATA")
 	else:
@@ -145,10 +148,29 @@ def del_fed(bot: Bot, update: Update, args: List[str]):
 		send_message(update.effective_message, tl(update.effective_message, "Hanya pemilik federasi yang dapat melakukan ini!"))
 		return
 
-	send_message(update.effective_message, tl(update.effective_message, "Anda yakin ingin menghapus federasi Anda? Tindakan ini tidak bisa dibatalkan, Anda akan kehilangan seluruh daftar larangan Anda, dan '{}' akan hilang secara permanen.").format(getinfo['fname']),
-			reply_markup=InlineKeyboardMarkup(
-						[[InlineKeyboardButton(text=tl(update.effective_message, "⚠️ Hapus Federasi ⚠️"), callback_data="rmfed_{}".format(fed_id))],
-						[InlineKeyboardButton(text=tl(update.effective_message, "Batalkan"), callback_data="rmfed_cancel")]]))
+	send_message(
+		update.effective_message,
+		tl(
+			update.effective_message,
+			"Anda yakin ingin menghapus federasi Anda? Tindakan ini tidak bisa dibatalkan, Anda akan kehilangan seluruh daftar larangan Anda, dan '{}' akan hilang secara permanen.",
+		).format(getinfo['fname']),
+		reply_markup=InlineKeyboardMarkup(
+			[
+				[
+					InlineKeyboardButton(
+						text=tl(update.effective_message, "⚠️ Hapus Federasi ⚠️"),
+						callback_data=f"rmfed_{fed_id}",
+					)
+				],
+				[
+					InlineKeyboardButton(
+						text=tl(update.effective_message, "Batalkan"),
+						callback_data="rmfed_cancel",
+					)
+				],
+			]
+		),
+	)
 
 @run_async
 def fed_chat(bot: Bot, update: Update, args: List[str]):
@@ -174,7 +196,7 @@ def fed_chat(bot: Bot, update: Update, args: List[str]):
 	info = sql.get_fed_info(fed_id)
 
 	text = tl(update.effective_message, "Obrolan ini adalah bagian dari federasi berikut:")
-	text += "\n{} (ID: <code>{}</code>)".format(info['fname'], fed_id)
+	text += f"\n{info['fname']} (ID: <code>{fed_id}</code>)"
 
 	send_message(update.effective_message, text, parse_mode=ParseMode.HTML)
 
@@ -195,22 +217,18 @@ def join_fed(bot: Bot, update: Update, args: List[str]):
 	administrators = chat.get_administrators()
 	fed_id = sql.get_fed_id(chat.id)
 
-	if user.id in SUDO_USERS:
-		pass
-	else:
+	if user.id not in SUDO_USERS:
 		for admin in administrators:
-			status = admin.status
-			if status == "creator":
-				if str(admin.user.id) == str(user.id):
-					pass
-				else:
+			if str(admin.user.id) != str(user.id):
+				status = admin.status
+				if status == "creator":
 					send_message(update.effective_message, tl(update.effective_message, "Hanya pembuat grup yang dapat melakukannya!"))
 					return
 	if fed_id:
 		send_message(update.effective_message, tl(update.effective_message, "Anda tidak bisa bergabung dua federasi dalam satu obrolan"))
 		return
 
-	if len(args) >= 1:
+	if args:
 		getfed = sql.search_fed_by_id(args[0])
 		if getfed == False:
 			send_message(update.effective_message, tl(update.effective_message, "Silakan masukkan id federasi yang valid."))
@@ -221,8 +239,7 @@ def join_fed(bot: Bot, update: Update, args: List[str]):
 			send_message(update.effective_message, tl(update.effective_message, "Gagal bergabung dengan federasi! Tolong hubungi pembuat saya jika masalah ini masih berlanjut."))
 			return
 
-		get_fedlog = sql.get_fed_log(args[0])
-		if get_fedlog:
+		if get_fedlog := sql.get_fed_log(args[0]):
 			if eval(get_fedlog):
 				bot.send_message(get_fedlog, tl(update.effective_message, "Obrolan *{}* telah bergabung ke federasi *{}*").format(chat.title, getfed['fname']), parse_mode="markdown")
 
@@ -248,8 +265,7 @@ def leave_fed(bot: Bot, update: Update, args: List[str]):
 	getuser = bot.get_chat_member(chat.id, user.id).status
 	if getuser in 'creator' or user.id in SUDO_USERS:
 		if sql.chat_leave_fed(chat.id) == True:
-			get_fedlog = sql.get_fed_log(fed_id)
-			if get_fedlog:
+			if get_fedlog := sql.get_fed_log(fed_id):
 				if eval(get_fedlog):
 					bot.send_message(get_fedlog, tl(update.effective_message, "Obrolan *{}* telah keluar ke federasi *{}*").format(chat.title, fed_info['fname']), parse_mode="markdown")
 			send_message(update.effective_message, tl(update.effective_message, "Obrolan ini telah keluar dari federasi {}!").format(fed_info['fname']))
@@ -301,8 +317,7 @@ def user_join_fed(bot: Bot, update: Update, args: List[str]):
 		if user_id == bot.id:
 			send_message(update.effective_message, tl(update.effective_message, "Saya sudah menjadi admin federasi dan yang mengelolanya!"))
 			return
-		res = sql.user_join_fed(fed_id, user_id)
-		if res:
+		if res := sql.user_join_fed(fed_id, user_id):
 			send_message(update.effective_message, tl(update.effective_message, "💖 Berhasil dinaikan jabatannya!"))
 		else:
 			send_message(update.effective_message, tl(update.effective_message, "Gagal dipromosikan!"))
@@ -369,21 +384,19 @@ def fed_info(bot: Bot, update: Update, args: List[str]):
 	user = update.effective_user  # type: Optional[User]
 	if args:
 		fed_id = args[0]
-		info = sql.get_fed_info(fed_id)
 	else:
 		fed_id = sql.get_fed_id(chat.id)
 		if not fed_id:
 			send_message(update.effective_message, tl(update.effective_message, "Grup ini tidak dalam federasi apa pun!"))
 			return
-		info = sql.get_fed_info(fed_id)
-
+	info = sql.get_fed_info(fed_id)
 	if is_user_fed_admin(fed_id, user.id) == False:
 		send_message(update.effective_message, tl(update.effective_message, "Hanya admin federasi yang dapat melakukan ini!"))
 		return
 
 	owner = bot.get_chat(info['owner'])
 	try:
-		owner_name = owner.first_name + " " + owner.last_name
+		owner_name = f"{owner.first_name} {owner.last_name}"
 	except:
 		owner_name = owner.first_name
 	FEDADMIN = sql.all_fed_users(fed_id)
@@ -395,7 +408,7 @@ def fed_info(bot: Bot, update: Update, args: List[str]):
 	info = sql.get_fed_info(fed_id)
 
 	text = tl(update.effective_message, "<b>ℹ️ Info federasi:</b>")
-	text += "\nFedID: <code>{}</code>".format(fed_id)
+	text += f"\nFedID: <code>{fed_id}</code>"
 	text += tl(update.effective_message, "\nNama: {}").format(info['fname'])
 	text += tl(update.effective_message, "\nPembuat: {}").format(mention_html(owner.id, owner_name))
 	text += tl(update.effective_message, "\nSeluruh admin: <code>{}</code>").format(TotalAdminFed)
@@ -437,10 +450,10 @@ def fed_admin(bot: Bot, update: Update, args: List[str]):
 	text += "👑 Owner:\n"
 	owner = bot.get_chat(info['owner'])
 	try:
-		owner_name = owner.first_name + " " + owner.last_name
+		owner_name = f"{owner.first_name} {owner.last_name}"
 	except:
 		owner_name = owner.first_name
-	text += " • {}\n".format(mention_html(owner.id, owner_name))
+	text += f" • {mention_html(owner.id, owner_name)}\n"
 
 	members = sql.all_fed_members(fed_id)
 	if len(members) == 0:
@@ -448,8 +461,8 @@ def fed_admin(bot: Bot, update: Update, args: List[str]):
 	else:
 		text += "\n🔱 Admins:\n"
 		for x in members:
-			user = bot.get_chat(x) 
-			text += " • {}\n".format(mention_html(user.id, user.first_name))
+			user = bot.get_chat(x)
+			text += f" • {mention_html(user.id, user.first_name)}\n"
 
 	send_message(update.effective_message, text, parse_mode=ParseMode.HTML)
 

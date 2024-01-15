@@ -84,88 +84,88 @@ def accuweather(bot, update, args):
         bot.send_sticker(update.effective_chat.id, BAN_STICKER)
         return
 
-    if True:
-        url = "http://api.accuweather.com/locations/v1/cities/search.json?q={}&apikey={}".format(location, API_ACCUWEATHER)
-        headers = {'Content-type': 'application/json'}
-        r = requests.get(url, headers=headers)
-        try:
-            data = r.json()[0]
-        except:
-            return send_message(update.effective_message, tl(update.effective_message, "Maaf, lokasi tidak ditemukan 😞"))
-        locid = data.get('Key')
-        weatherlang = tl(update.effective_message, "weather_lang")
-        urls = "http://api.accuweather.com/currentconditions/v1/{}.json?apikey={}&language={}&details=true&getphotos=true".format(locid, API_ACCUWEATHER, weatherlang)
-        rs = requests.get(urls, headers=headers)
-        datas = rs.json()[0]
+    url = f"http://api.accuweather.com/locations/v1/cities/search.json?q={location}&apikey={API_ACCUWEATHER}"
+    headers = {'Content-type': 'application/json'}
+    r = requests.get(url, headers=headers)
+    try:
+        data = r.json()[0]
+    except:
+        return send_message(update.effective_message, tl(update.effective_message, "Maaf, lokasi tidak ditemukan 😞"))
+    locid = data.get('Key')
+    weatherlang = tl(update.effective_message, "weather_lang")
+    urls = f"http://api.accuweather.com/currentconditions/v1/{locid}.json?apikey={API_ACCUWEATHER}&language={weatherlang}&details=true&getphotos=true"
+    rs = requests.get(urls, headers=headers)
+    datas = rs.json()[0]
 
-        if datas.get('WeatherIcon') <= 44:
-            icweather = "☁"
-        elif datas.get('WeatherIcon') <= 42:
-            icweather = "⛈"
-        elif datas.get('WeatherIcon') <= 40:
-            icweather = "🌧"
-        elif datas.get('WeatherIcon') <= 38:
-            icweather = "☁"
-        elif datas.get('WeatherIcon') <= 36:
-            icweather = "⛅"
-        elif datas.get('WeatherIcon') <= 33:
-            icweather = "🌑"
-        elif datas.get('WeatherIcon') <= 32:
-            icweather = "🌬"
-        elif datas.get('WeatherIcon') <= 31:
-            icweather = "⛄"
-        elif datas.get('WeatherIcon') <= 30:
-            icweather = "🌡"
-        elif datas.get('WeatherIcon') <= 29:
-            icweather = "☃"
-        elif datas.get('WeatherIcon') <= 24:
-            icweather = "❄"
-        elif datas.get('WeatherIcon') <= 23:
-            icweather = "🌥"
-        elif datas.get('WeatherIcon') <= 19:
-            icweather = "☁"
-        elif datas.get('WeatherIcon') <= 18:
-            icweather = "🌨"
-        elif datas.get('WeatherIcon') <= 17:
-            icweather = "🌦"
-        elif datas.get('WeatherIcon') <= 15:
-            icweather = "⛈"
-        elif datas.get('WeatherIcon') <= 14:
-            icweather = "🌦"
-        elif datas.get('WeatherIcon') <= 12:
-            icweather = "🌧"
-        elif datas.get('WeatherIcon') <= 11:
-            icweather = "🌫"
-        elif datas.get('WeatherIcon') <= 8:
-            icweather = "⛅️"
-        elif datas.get('WeatherIcon') <= 5:
-            icweather = "☀️"
-        else:
-            icweather = ""
+    if datas.get('WeatherIcon') <= 44:
+        icweather = "☁"
+    elif datas.get('WeatherIcon') <= 42:
+        icweather = "⛈"
+    elif datas.get('WeatherIcon') <= 40:
+        icweather = "🌧"
+    elif datas.get('WeatherIcon') <= 38:
+        icweather = "☁"
+    elif datas.get('WeatherIcon') <= 36:
+        icweather = "⛅"
+    elif datas.get('WeatherIcon') <= 33:
+        icweather = "🌑"
+    elif datas.get('WeatherIcon') <= 32:
+        icweather = "🌬"
+    elif datas.get('WeatherIcon') <= 31:
+        icweather = "⛄"
+    elif datas.get('WeatherIcon') <= 30:
+        icweather = "🌡"
+    elif datas.get('WeatherIcon') <= 29:
+        icweather = "☃"
+    elif datas.get('WeatherIcon') <= 24:
+        icweather = "❄"
+    elif datas.get('WeatherIcon') <= 23:
+        icweather = "🌥"
+    elif datas.get('WeatherIcon') <= 19:
+        icweather = "☁"
+    elif datas.get('WeatherIcon') <= 18:
+        icweather = "🌨"
+    elif datas.get('WeatherIcon') <= 17:
+        icweather = "🌦"
+    elif datas.get('WeatherIcon') <= 15:
+        icweather = "⛈"
+    elif datas.get('WeatherIcon') <= 14:
+        icweather = "🌦"
+    elif datas.get('WeatherIcon') <= 12:
+        icweather = "🌧"
+    elif datas.get('WeatherIcon') <= 11:
+        icweather = "🌫"
+    elif datas.get('WeatherIcon') <= 8:
+        icweather = "⛅️"
+    elif datas.get('WeatherIcon') <= 5:
+        icweather = "☀️"
+    else:
+        icweather = ""
 
-        cuaca = "*{} {}*\n".format(icweather, datas.get('WeatherText'))
-        cuaca += tl(update.effective_message, "*Suhu:* `{}°C`/`{}°F`\n").format(datas.get('Temperature').get('Metric').get('Value'), datas.get('Temperature').get('Imperial').get('Value'))
-        cuaca += tl(update.effective_message, "*Kelembapan:* `{}`\n").format(datas.get('RelativeHumidity'))
-        direct = "{}".format(datas.get('Wind').get('Direction').get('English'))
-        direct = direct.replace("N", "↑").replace("E", "→").replace("S", "↓").replace("W", "←")
-        cuaca += tl(update.effective_message, "*Angin:* `{} {} km/h` | `{} mi/h`\n").format(direct, datas.get('Wind').get('Speed').get('Metric').get('Value'), datas.get('Wind').get('Speed').get('Imperial').get('Value'))
-        cuaca += tl(update.effective_message, "*Tingkat UV:* `{}`\n").format(datas.get('UVIndexText'))
-        cuaca += tl(update.effective_message, "*Tekanan:* `{}` (`{} mb`)\n").format(datas.get('PressureTendency').get('LocalizedText'), datas.get('Pressure').get('Metric').get('Value'))
+    cuaca = f"*{icweather} {datas.get('WeatherText')}*\n"
+    cuaca += tl(update.effective_message, "*Suhu:* `{}°C`/`{}°F`\n").format(datas.get('Temperature').get('Metric').get('Value'), datas.get('Temperature').get('Imperial').get('Value'))
+    cuaca += tl(update.effective_message, "*Kelembapan:* `{}`\n").format(datas.get('RelativeHumidity'))
+    direct = f"{datas.get('Wind').get('Direction').get('English')}"
+    direct = direct.replace("N", "↑").replace("E", "→").replace("S", "↓").replace("W", "←")
+    cuaca += tl(update.effective_message, "*Angin:* `{} {} km/h` | `{} mi/h`\n").format(direct, datas.get('Wind').get('Speed').get('Metric').get('Value'), datas.get('Wind').get('Speed').get('Imperial').get('Value'))
+    cuaca += tl(update.effective_message, "*Tingkat UV:* `{}`\n").format(datas.get('UVIndexText'))
+    cuaca += tl(update.effective_message, "*Tekanan:* `{}` (`{} mb`)\n").format(datas.get('PressureTendency').get('LocalizedText'), datas.get('Pressure').get('Metric').get('Value'))
 
-        lok = []
-        lok.append(data.get('LocalizedName'))
-        lok.append(data.get('AdministrativeArea').get('LocalizedName'))
-        for x in reversed(range(len(data.get('SupplementalAdminAreas')))):
-            lok.append(data.get('SupplementalAdminAreas')[x].get('LocalizedName'))
-        lok.append(data.get('Country').get('LocalizedName'))
-        teks = tl(update.effective_message, "*Cuaca di {} saat ini*\n").format(data.get('LocalizedName'))
-        teks += "{}\n".format(cuaca)
-        teks += tl(update.effective_message, "*Lokasi:* `{}`\n\n").format(", ".join(lok))
+    lok = [data.get('LocalizedName')]
+    lok.append(data.get('AdministrativeArea').get('LocalizedName'))
+    lok.extend(
+        data.get('SupplementalAdminAreas')[x].get('LocalizedName')
+        for x in reversed(range(len(data.get('SupplementalAdminAreas'))))
+    )
+    lok.append(data.get('Country').get('LocalizedName'))
+    teks = tl(update.effective_message, "*Cuaca di {} saat ini*\n").format(data.get('LocalizedName'))
+    teks += f"{cuaca}\n"
+    teks += tl(update.effective_message, "*Lokasi:* `{}`\n\n").format(", ".join(lok))
 
-        # try:
-        #     bot.send_photo(chat_id, photo=datas.get('Photos')[0].get('LandscapeLink'), caption=teks, parse_mode="markdown", reply_to_message_id=message.message_id, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text="More info", url=datas.get('Link'))]]))
-        # except:
-        send_message(update.effective_message, teks, parse_mode="markdown", disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text="More info", url=datas.get('Link'))]]))
+    # try:
+    #     bot.send_photo(chat_id, photo=datas.get('Photos')[0].get('LandscapeLink'), caption=teks, parse_mode="markdown", reply_to_message_id=message.message_id, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text="More info", url=datas.get('Link'))]]))
+    # except:
+    send_message(update.effective_message, teks, parse_mode="markdown", disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text="More info", url=datas.get('Link'))]]))
 
 
 __help__ = "weather_help"

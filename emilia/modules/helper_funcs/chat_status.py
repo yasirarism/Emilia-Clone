@@ -181,9 +181,10 @@ def no_reply_handler(func):
                     if " update.effective_message" in x:
                         do_func = x.split("update.effective_message", 1)[1].split(")", 1)
                         do_func = "".join(do_func)
-                        exec("update.effective_message" + do_func + ", quote=False)")
+                        exec(f"update.effective_message{do_func}, quote=False)")
                     elif "message.reply_text(" in x:
                         do_func = x.split("message.reply_text", 1)[1].split(")", 1)
                         do_func = "".join(do_func)
-                        exec("update.effective_message.reply_text" + do_func + ", quote=False)")
+                        exec(f"update.effective_message.reply_text{do_func}, quote=False)")
+
     return error_catcher

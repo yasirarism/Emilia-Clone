@@ -48,8 +48,7 @@ def promote(bot: Bot, update: Update, args: List[str]) -> str:
     if spam == True:
         return
 
-    conn = connected(bot, update, chat, user.id, need_admin=True)
-    if conn:
+    if conn := connected(bot, update, chat, user.id, need_admin=True):
         chat = dispatcher.bot.getChat(conn)
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -67,7 +66,7 @@ def promote(bot: Bot, update: Update, args: List[str]) -> str:
         return ""
 
     user_member = chat.get_member(user_id)
-    if user_member.status == 'administrator' or user_member.status == 'creator':
+    if user_member.status in ['administrator', 'creator']:
         send_message(update.effective_message, tl(update.effective_message, "Bagaimana saya ingin menaikan jabatan seseorang yang sudah menjadi admin?"))
         return ""
 
@@ -94,13 +93,8 @@ def promote(bot: Bot, update: Update, args: List[str]) -> str:
         return
 
     send_message(update.effective_message, tl(update.effective_message, "💖 Berhasil dinaikan jabatannya!"))
-    
-    return "<b>{}:</b>" \
-           "\n#PROMOTED" \
-           "\n<b>Admin:</b> {}" \
-           "\n<b>User:</b> {}".format(html.escape(chat.title),
-                                      mention_html(user.id, user.first_name),
-                                      mention_html(user_member.user.id, user_member.user.first_name))
+
+    return f"<b>{html.escape(chat.title)}:</b>\n#PROMOTED\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\n<b>User:</b> {mention_html(user_member.user.id, user_member.user.first_name)}"
 
 
 @run_async
@@ -117,8 +111,7 @@ def demote(bot: Bot, update: Update, args: List[str]) -> str:
     if spam == True:
         return
 
-    conn = connected(bot, update, chat, user.id, need_admin=True)
-    if conn:
+    if conn := connected(bot, update, chat, user.id, need_admin=True):
         chat = dispatcher.bot.getChat(conn)
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -140,7 +133,7 @@ def demote(bot: Bot, update: Update, args: List[str]) -> str:
         send_message(update.effective_message, tl(update.effective_message, "Orang ini MENCIPTAKAN obrolan ini, bagaimana saya menurunkannya?"))
         return ""
 
-    if not user_member.status == 'administrator':
+    if user_member.status != 'administrator':
         send_message(update.effective_message, tl(update.effective_message, "Tidak dapat menurunkan jabatan apa yang belum dipromosikan!"))
         return ""
 
@@ -159,12 +152,7 @@ def demote(bot: Bot, update: Update, args: List[str]) -> str:
                               can_pin_messages=False,
                               can_promote_members=False)
         send_message(update.effective_message, tl(update.effective_message, "💔 Berhasil diturunkan jabatannya!"))
-        return "<b>{}:</b>" \
-               "\n#DEMOTED" \
-               "\n<b>Admin:</b> {}" \
-               "\n<b>User:</b> {}".format(html.escape(chat.title),
-                                          mention_html(user.id, user.first_name),
-                                          mention_html(user_member.user.id, user_member.user.first_name))
+        return f"<b>{html.escape(chat.title)}:</b>\n#DEMOTED\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\n<b>User:</b> {mention_html(user_member.user.id, user_member.user.first_name)}"
 
     except BadRequest:
         send_message(update.effective_message, tl(update.effective_message, "Tidak dapat menurunkan jabatannya. Saya mungkin bukan admin, atau status admin ditunjuk oleh "
@@ -209,11 +197,11 @@ def pin(bot: Bot, update: Update, args: List[str]) -> str:
             send_message(update.effective_message, tl(update.effective_message, "Balas pesan untuk pin pesan tersebut pada grup ini"))
             return ""
 
-    is_group = chat.type != "private" and chat.type != "channel"
+    is_group = chat.type not in ["private", "channel"]
 
     is_silent = True
-    if len(args) >= 1:
-        is_silent = not (args[0].lower() == 'notify' or args[0].lower() == 'loud' or args[0].lower() == 'violent')
+    if args:
+        is_silent = args[0].lower() not in ['notify', 'loud', 'violent']
 
     if prev_message and is_group:
         try:
@@ -221,13 +209,9 @@ def pin(bot: Bot, update: Update, args: List[str]) -> str:
             if conn:
                 send_message(update.effective_message, tl(update.effective_message, "Saya sudah pin pesan dalam grup {}").format(chat_name))
         except BadRequest as excp:
-            if excp.message == "Chat_not_modified":
-                pass
-            else:
+            if excp.message != "Chat_not_modified":
                 raise
-        return "<b>{}:</b>" \
-               "\n#PINNED" \
-               "\n<b>Admin:</b> {}".format(html.escape(chat.title), mention_html(user.id, user.first_name))
+        return f"<b>{html.escape(chat.title)}:</b>\n#PINNED\n<b>Admin:</b> {mention_html(user.id, user.first_name)}"
 
     return ""
 
@@ -263,15 +247,10 @@ def unpin(bot: Bot, update: Update) -> str:
         if conn:
             send_message(update.effective_message, tl(update.effective_message, "Saya sudah unpin pesan dalam grup {}").format(chat_name))
     except BadRequest as excp:
-        if excp.message == "Chat_not_modified":
-            pass
-        else:
+        if excp.message != "Chat_not_modified":
             raise
 
-    return "<b>{}:</b>" \
-           "\n#UNPINNED" \
-           "\n<b>Admin:</b> {}".format(html.escape(chat.title),
-                                       mention_html(user.id, user.first_name))
+    return f"<b>{html.escape(chat.title)}:</b>\n#UNPINNED\n<b>Admin:</b> {mention_html(user.id, user.first_name)}"
 
 
 @run_async
@@ -285,8 +264,7 @@ def invite(bot: Bot, update: Update):
     if spam == True:
         return
 
-    conn = connected(bot, update, chat, user.id, need_admin=True)
-    if conn:
+    if conn := connected(bot, update, chat, user.id, need_admin=True):
         chat = dispatcher.bot.getChat(conn)
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -300,7 +278,7 @@ def invite(bot: Bot, update: Update):
 
     if chat.username:
         send_message(update.effective_message, chat.username)
-    elif chat.type == chat.SUPERGROUP or chat.type == chat.CHANNEL:
+    elif chat.type in [chat.SUPERGROUP, chat.CHANNEL]:
         bot_member = chat.get_member(bot.id)
         if bot_member.can_invite_users:
             invitelink = bot.exportChatInviteLink(chat.id)
@@ -320,8 +298,7 @@ def adminlist(bot: Bot, update: Update):
     if spam == True:
         return
 
-    conn = connected(bot, update, chat, user.id, need_admin=False)
-    if conn:
+    if conn := connected(bot, update, chat, user.id, need_admin=False):
         chat = dispatcher.bot.getChat(conn)
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -341,23 +318,23 @@ def adminlist(bot: Bot, update: Update):
         if user.first_name == '':
             name = tl(update.effective_message, "☠ Akun Terhapus")
         else:
-            name = "{}".format(mention_markdown(user.id, user.first_name + " " + (user.last_name or "")))
+            name = f'{mention_markdown(user.id, f"{user.first_name} " + (user.last_name or ""))}'
         #if user.username:
         #    name = escape_markdown("@" + user.username)
         if status == "creator":
             text += "\n 👑 Creator:"
-            text += "\n` • `{} \n\n 🔱 Admins:".format(name)
+            text += f"\n` • `{name} \n\n 🔱 Admins:"
     for admin in administrators:
         user = admin.user
         status = admin.status
         if user.first_name == '':
             name = tl(update.effective_message, "☠ Akun Terhapus")
         else:
-            name = "{}".format(mention_markdown(user.id, user.first_name + " " + (user.last_name or "")))
+            name = f'{mention_markdown(user.id, f"{user.first_name} " + (user.last_name or ""))}'
         #if user.username:
         #    name = escape_markdown("@" + user.username)
         if status == "administrator":
-            text += "\n` • `{}".format(name)
+            text += f"\n` • `{name}"
 
     try:
         send_message(update.effective_message, text, parse_mode=ParseMode.MARKDOWN)
@@ -377,8 +354,7 @@ def permapin(bot: Bot, update: Update):
     if spam == True:
         return
 
-    conn = connected(bot, update, chat, user.id, need_admin=False)
-    if conn:
+    if conn := connected(bot, update, chat, user.id, need_admin=False):
         chat = dispatcher.bot.getChat(conn)
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -396,7 +372,7 @@ def permapin(bot: Bot, update: Update):
         message.delete()
     except BadRequest:
         pass
-    if str(data_type) in ('Types.BUTTON_TEXT', 'Types.TEXT'):
+    if str(data_type) in {'Types.BUTTON_TEXT', 'Types.TEXT'}:
         try:
             sendingmsg = bot.send_message(chat_id, text, parse_mode="markdown",
                                  disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup(tombol))
@@ -422,8 +398,7 @@ def permanent_pin_set(bot: Bot, update: Update, args: List[str]) -> str:
     if spam == True:
         return
 
-    conn = connected(bot, update, chat, user.id, need_admin=True)
-    if conn:
+    if conn := connected(bot, update, chat, user.id, need_admin=True):
         chat = dispatcher.bot.getChat(conn)
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
@@ -432,9 +407,9 @@ def permanent_pin_set(bot: Bot, update: Update, args: List[str]) -> str:
             text_maker = tl(update.effective_message, "Permanen pin saat ini di atur: `{}`").format(bool(int(get_permapin)))
             if get_permapin:
                 if chat.username:
-                    old_pin = "https://t.me/{}/{}".format(chat.username, get_permapin)
+                    old_pin = f"https://t.me/{chat.username}/{get_permapin}"
                 else:
-                    old_pin = "https://t.me/c/{}/{}".format(str(chat.id)[4:], get_permapin)
+                    old_pin = f"https://t.me/c/{str(chat.id)[4:]}/{get_permapin}"
                 text_maker += tl(update.effective_message, "\nUntuk menonaktifkan permanen pin: `/permanentpin off`")
                 text_maker += tl(update.effective_message, "\n\n[Pesan permanen pin ada disini]({})").format(old_pin)
             send_message(update.effective_message, tl(update.effective_message, text_maker), parse_mode="markdown")
@@ -464,22 +439,20 @@ def permanent_pin_set(bot: Bot, update: Update, args: List[str]) -> str:
             text_maker = tl(update.effective_message, "Permanen pin saat ini di atur: `{}`").format(bool(int(get_permapin)))
             if get_permapin:
                 if chat.username:
-                    old_pin = "https://t.me/{}/{}".format(chat.username, get_permapin)
+                    old_pin = f"https://t.me/{chat.username}/{get_permapin}"
                 else:
-                    old_pin = "https://t.me/c/{}/{}".format(str(chat.id)[4:], get_permapin)
+                    old_pin = f"https://t.me/c/{str(chat.id)[4:]}/{get_permapin}"
                 text_maker += tl(update.effective_message, "\nUntuk menonaktifkan permanen pin: `/permanentpin off`")
                 text_maker += tl(update.effective_message, "\n\n[Pesan permanen pin ada disini]({})").format(old_pin)
             send_message(update.effective_message, text_maker, parse_mode="markdown")
             return ""
 
-    is_group = chat.type != "private" and chat.type != "channel"
+    is_group = chat.type not in ["private", "channel"]
 
     if prev_message and is_group:
         sql.set_permapin(chat.id, prev_message)
         send_message(update.effective_message, tl(update.effective_message, "Permanent pin berhasil di atur!"))
-        return "<b>{}:</b>" \
-               "\n#PERMANENT_PIN" \
-               "\n<b>Admin:</b> {}".format(html.escape(chat.title), mention_html(user.id, user.first_name))
+        return f"<b>{html.escape(chat.title)}:</b>\n#PERMANENT_PIN\n<b>Admin:</b> {mention_html(user.id, user.first_name)}"
 
     return ""
 
@@ -491,15 +464,15 @@ def permanent_pin(bot: Bot, update: Update):
     message = update.effective_message
 
     get_permapin = sql.get_permapin(chat.id)
-    if get_permapin and not user.id == bot.id:
+    if get_permapin and user.id != bot.id:
         try:
             to_del = bot.pinChatMessage(chat.id, get_permapin, disable_notification=True)
         except BadRequest:
             sql.set_permapin(chat.id, 0)
             if chat.username:
-                old_pin = "https://t.me/{}/{}".format(chat.username, get_permapin)
+                old_pin = f"https://t.me/{chat.username}/{get_permapin}"
             else:
-                old_pin = "https://t.me/c/{}/{}".format(str(chat.id)[4:], get_permapin)
+                old_pin = f"https://t.me/c/{str(chat.id)[4:]}/{get_permapin}"
             send_message(update.effective_message, tl(update.effective_message, "*Permanen pin error:*\nSaya tidak bisa menyematkan pesan di sini!\nPastikan saya admin dan dapat pin pesan.\n\nPermanen pin di nonaktifkan, [pesan permanen pin lama ada disini]({})").format(old_pin), parse_mode="markdown")
             return
 
@@ -514,30 +487,30 @@ def permanent_pin(bot: Bot, update: Update):
 def __chat_settings__(chat_id, user_id):
     administrators = dispatcher.bot.getChatAdministrators(chat_id)
     chat = dispatcher.bot.getChat(chat_id)
-    text = "Admin di *{}*:".format(chat.title or "chat ini")
+    text = f'Admin di *{chat.title or "chat ini"}*:'
     for admin in administrators:
         user = admin.user
         status = admin.status
         if user.first_name == '':
             name = tl(user_id, "☠ Akun Terhapus")
         else:
-            name = "{}".format(mention_markdown(user.id, user.first_name + " " + (user.last_name or "")))
+            name = f'{mention_markdown(user.id, f"{user.first_name} " + (user.last_name or ""))}'
         #if user.username:
         #    name = escape_markdown("@" + user.username)
         if status == "creator":
             text += "\n 👑 Creator:"
-            text += "\n` • `{} \n\n 🔱 Admin:".format(name)
+            text += f"\n` • `{name} \n\n 🔱 Admin:"
     for admin in administrators:
         user = admin.user
         status = admin.status
         if user.first_name == '':
             name = tl(user_id, "☠ Akun Terhapus")
         else:
-            name = "{}".format(mention_markdown(user.id, user.first_name + " " + (user.last_name or "")))
+            name = f'{mention_markdown(user.id, f"{user.first_name} " + (user.last_name or ""))}'
         #if user.username:
         #    name = escape_markdown("@" + user.username)
         if status == "administrator":
-            text += "\n` • `{}".format(name)
+            text += f"\n` • `{name}"
     text += tl(user_id, "\n\nKamu adalah *{}*").format(dispatcher.bot.get_chat_member(chat_id, user_id).status)
     return text
 

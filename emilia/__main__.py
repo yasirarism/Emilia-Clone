@@ -42,11 +42,11 @@ CHAT_SETTINGS = {}
 USER_SETTINGS = {}
 
 for module_name in ALL_MODULES:
-    imported_module = importlib.import_module("emilia.modules." + module_name)
+    imported_module = importlib.import_module(f"emilia.modules.{module_name}")
     if not hasattr(imported_module, "__mod_name__"):
         imported_module.__mod_name__ = imported_module.__name__
 
-    if not imported_module.__mod_name__.lower() in IMPORTED:
+    if imported_module.__mod_name__.lower() not in IMPORTED:
         IMPORTED[imported_module.__mod_name__.lower()] = imported_module
     else:
         raise Exception("Can't have two modules with the same name! Please change one")
@@ -100,7 +100,7 @@ def start(bot: Bot, update: Update, args: List[str]):
     if spam == True:
         return
     if update.effective_chat.type == "private":
-        if len(args) >= 1:
+        if args:
             if args[0].lower() == "help":
                 send_help(update.effective_chat.id, tl(update.effective_message, HELP_STRINGS))
 
@@ -129,10 +129,24 @@ def start(bot: Bot, update: Update, args: List[str]):
                 judul = pagewiki.title
                 summary = pagewiki.summary
                 if len(summary) >= 4096:
-                    summary = summary[:4000]+"..."
-                message.reply_text("<b>{}</b>\n{}".format(judul, summary), parse_mode=ParseMode.HTML,
+                    summary = f"{summary[:4000]}..."
+                message.reply_text(
+                    f"<b>{judul}</b>\n{summary}",
+                    parse_mode=ParseMode.HTML,
                     reply_markup=InlineKeyboardMarkup(
-                            [[InlineKeyboardButton(text=tl(update.effective_message, "Baca di Wikipedia"), url=pagewiki.url)]]))
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    text=tl(
+                                        update.effective_message,
+                                        "Baca di Wikipedia",
+                                    ),
+                                    url=pagewiki.url,
+                                )
+                            ]
+                        ]
+                    ),
+                )
 
         else:
             first_name = update.effective_user.first_name
@@ -228,13 +242,11 @@ def help_button(bot: Bot, update: Update):
         query.message.delete()
         bot.answer_callback_query(query.id)
     except Exception as excp:
-        if excp.message == "Message is not modified":
-            pass
-        elif excp.message == "Query_id_invalid":
-            pass
-        elif excp.message == "Message can't be deleted":
-            pass
-        else:
+        if excp.message not in [
+            "Message is not modified",
+            "Query_id_invalid",
+            "Message can't be deleted",
+        ]:
             query.message.edit_text(excp.message)
             LOGGER.exception("Exception in help buttons. %s", str(query.data))
 
@@ -252,11 +264,22 @@ def get_help(bot: Bot, update: Update):
     if chat.type != chat.PRIVATE:
 
         # update.effective_message.reply_text("Contact me in PM to get the list of possible commands.",
-        update.effective_message.reply_text(tl(update.effective_message, "Hubungi saya di PM untuk mendapatkan daftar perintah."),
-                                            reply_markup=InlineKeyboardMarkup(
-                                                [[InlineKeyboardButton(text=tl(update.effective_message, "Tolong"),
-                                                                       url="t.me/{}?start=help".format(
-                                                                           bot.username))]]))
+        update.effective_message.reply_text(
+            tl(
+                update.effective_message,
+                "Hubungi saya di PM untuk mendapatkan daftar perintah.",
+            ),
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            text=tl(update.effective_message, "Tolong"),
+                            url=f"t.me/{bot.username}?start=help",
+                        )
+                    ]
+                ]
+            ),
+        )
         return
 
     elif len(args) >= 2 and any(args[1].lower() == x for x in HELPABLE):
@@ -273,7 +296,9 @@ def send_settings(chat_id, user_id, user=False):
     if user:
         if USER_SETTINGS:
             settings = "\n\n".join(
-                "*{}*:\n{}".format(mod.__mod_name__, mod.__user_settings__(user_id)) for mod in USER_SETTINGS.values())
+                f"*{mod.__mod_name__}*:\n{mod.__user_settings__(user_id)}"
+                for mod in USER_SETTINGS.values()
+            )
             dispatcher.bot.send_message(user_id, tl(chat_id, "Ini adalah pengaturan Anda saat ini:") + "\n\n" + settings,
                                         parse_mode=ParseMode.MARKDOWN)
 
@@ -281,18 +306,17 @@ def send_settings(chat_id, user_id, user=False):
             dispatcher.bot.send_message(user_id, tl(chat_id, "Sepertinya tidak ada pengaturan khusus pengguna yang tersedia 😢"),
                                         parse_mode=ParseMode.MARKDOWN)
 
+    elif CHAT_SETTINGS:
+        chat_name = dispatcher.bot.getChat(chat_id).title
+        dispatcher.bot.send_message(user_id,
+                                    text=tl(chat_id, "Modul mana yang ingin Anda periksa untuk pengaturan {}?").format(
+                                        chat_name),
+                                    reply_markup=InlineKeyboardMarkup(
+                                        paginate_modules(0, CHAT_SETTINGS, "stngs", chat=chat_id)))
     else:
-        if CHAT_SETTINGS:
-            chat_name = dispatcher.bot.getChat(chat_id).title
-            dispatcher.bot.send_message(user_id,
-                                        text=tl(chat_id, "Modul mana yang ingin Anda periksa untuk pengaturan {}?").format(
-                                            chat_name),
-                                        reply_markup=InlineKeyboardMarkup(
-                                            paginate_modules(0, CHAT_SETTINGS, "stngs", chat=chat_id)))
-        else:
-            dispatcher.bot.send_message(user_id, tl(chat_id, "Sepertinya tidak ada pengaturan obrolan yang tersedia 😢\nKirim ini "
-                                                 "ke obrolan Anda sebagai admin untuk menemukan pengaturannya saat ini!"),
-                                        parse_mode=ParseMode.MARKDOWN)
+        dispatcher.bot.send_message(user_id, tl(chat_id, "Sepertinya tidak ada pengaturan obrolan yang tersedia 😢\nKirim ini "
+                                             "ke obrolan Anda sebagai admin untuk menemukan pengaturannya saat ini!"),
+                                    parse_mode=ParseMode.MARKDOWN)
 
 
 @run_async
@@ -310,7 +334,7 @@ def settings_button(bot: Bot, update: Update):
             chat = bot.get_chat(chat_id)
             getstatusadmin = bot.get_chat_member(chat_id, user.id)
             isadmin = getstatusadmin.status in ('administrator', 'creator')
-            if isadmin == False or user.id != OWNER_ID:
+            if not isadmin or user.id != OWNER_ID:
                 query.message.edit_text("Status admin anda telah berubah")
                 return
             text = tl(update.effective_message, "*{}* memiliki pengaturan berikut untuk modul *{}*:\n\n").format(escape_markdown(chat.title),
@@ -321,8 +345,14 @@ def settings_button(bot: Bot, update: Update):
                 set_button = CHAT_SETTINGS[module].__chat_settings_btn__(chat_id, user.id)
             except AttributeError:
                 set_button = []
-            set_button.append([InlineKeyboardButton(text=tl(query.message, "Kembali"),
-                                                               callback_data="stngs_back({})".format(chat_id))])
+            set_button.append(
+                [
+                    InlineKeyboardButton(
+                        text=tl(query.message, "Kembali"),
+                        callback_data=f"stngs_back({chat_id})",
+                    )
+                ]
+            )
             query.message.reply_text(text=text,
                                   parse_mode=ParseMode.MARKDOWN,
                                   reply_markup=InlineKeyboardMarkup(set_button))
@@ -360,13 +390,11 @@ def settings_button(bot: Bot, update: Update):
         query.message.delete()
         bot.answer_callback_query(query.id)
     except Exception as excp:
-        if excp.message == "Message is not modified":
-            pass
-        elif excp.message == "Query_id_invalid":
-            pass
-        elif excp.message == "Message can't be deleted":
-            pass
-        else:
+        if excp.message not in [
+            "Message is not modified",
+            "Query_id_invalid",
+            "Message can't be deleted",
+        ]:
             query.message.edit_text(excp.message)
             LOGGER.exception("Exception in settings buttons. %s", str(query.data))
 
@@ -383,19 +411,26 @@ def get_settings(bot: Bot, update: Update):
         return
 
     # ONLY send settings in PM
-    if chat.type != chat.PRIVATE:
-        if is_user_admin(chat, user.id):
-            text = tl(update.effective_message, "Klik di sini untuk mendapatkan pengaturan obrolan ini, serta milik Anda.")
-            msg.reply_text(text,
-                           reply_markup=InlineKeyboardMarkup(
-                               [[InlineKeyboardButton(text="Pengaturan",
-                                                      url="t.me/{}?start=stngs_{}".format(
-                                                          bot.username, chat.id))]]))
-        else:
-            text = tl(update.effective_message, "Klik di sini untuk memeriksa pengaturan Anda.")
-
-    else:
+    if chat.type == chat.PRIVATE:
         send_settings(chat.id, user.id, True)
+
+    elif is_user_admin(chat, user.id):
+        text = tl(update.effective_message, "Klik di sini untuk mendapatkan pengaturan obrolan ini, serta milik Anda.")
+        msg.reply_text(
+            text,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            text="Pengaturan",
+                            url=f"t.me/{bot.username}?start=stngs_{chat.id}",
+                        )
+                    ]
+                ]
+            ),
+        )
+    else:
+        text = tl(update.effective_message, "Klik di sini untuk memeriksa pengaturan Anda.")
 
 
 @run_async
@@ -553,5 +588,5 @@ def process_update(self, update):
             self.logger.exception('An uncaught error was raised while processing the update')
 
 if __name__ == '__main__':
-    LOGGER.info("Successfully loaded modules: " + str(ALL_MODULES))
+    LOGGER.info(f"Successfully loaded modules: {str(ALL_MODULES)}")
     main()

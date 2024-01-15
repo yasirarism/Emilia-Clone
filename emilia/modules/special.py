@@ -56,10 +56,15 @@ def getsticker(bot: Bot, update: Update):
 	msg = update.effective_message
 	chat_id = update.effective_chat.id
 	if msg.reply_to_message and msg.reply_to_message.sticker:
-		send_message(update.effective_message, "Hai " + "[{}](tg://user?id={})".format(msg.from_user.first_name,
-											msg.from_user.id) + ", Silahkan cek file yang anda minta dibawah ini."
-											"\nTolong gunakan fitur ini dengan bijak!",
-											parse_mode=ParseMode.MARKDOWN)
+		send_message(
+			update.effective_message,
+			(
+				f"Hai [{msg.from_user.first_name}](tg://user?id={msg.from_user.id})"
+				+ ", Silahkan cek file yang anda minta dibawah ini."
+				"\nTolong gunakan fitur ini dengan bijak!"
+			),
+			parse_mode=ParseMode.MARKDOWN,
+		)
 		bot.sendChatAction(chat_id, "upload_document")
 		file_id = msg.reply_to_message.sticker.file_id
 		newFile = bot.get_file(file_id)
@@ -67,11 +72,13 @@ def getsticker(bot: Bot, update: Update):
 		bot.sendDocument(chat_id, document=open('sticker.png', 'rb'))
 		bot.sendChatAction(chat_id, "upload_photo")
 		bot.send_photo(chat_id, photo=open('sticker.png', 'rb'))
-		
+
 	else:
-		send_message(update.effective_message, "Hai " + "[{}](tg://user?id={})".format(msg.from_user.first_name,
-											msg.from_user.id) + ", Tolong balas pesan stiker untuk mendapatkan gambar stiker",
-											parse_mode=ParseMode.MARKDOWN)
+		send_message(
+			update.effective_message,
+			f"Hai [{msg.from_user.first_name}](tg://user?id={msg.from_user.id}), Tolong balas pesan stiker untuk mendapatkan gambar stiker",
+			parse_mode=ParseMode.MARKDOWN,
+		)
 
 @run_async
 def stiker(bot: Bot, update: Update):
@@ -176,12 +183,11 @@ def terjemah(bot: Bot, update: Update):
 					target = target.split("-")[0]
 				else:
 					target2 = None
+			elif getlang:
+				target = getlang
+				target2 = None
 			else:
-				if getlang:
-					target = getlang
-					target2 = None
-				else:
-					raise IndexError
+				raise IndexError
 			teks = msg.reply_to_message.text
 			#teks = deEmojify(teks)
 			exclude_list = UNICODE_EMOJI.keys()
@@ -190,14 +196,14 @@ def terjemah(bot: Bot, update: Update):
 					teks = teks.replace(emoji, '')
 			message = update.effective_message
 			trl = Translator()
-			if target2 == None:
+			if target2 is None:
 				deteksibahasa = trl.detect(teks)
 				tekstr = trl.translate(teks, dest=target)
 				send_message(update.effective_message, tl(update.effective_message, "Diterjemahkan dari `{}` ke `{}`:\n`{}`").format(deteksibahasa.lang, target, tekstr.text), parse_mode=ParseMode.MARKDOWN)
 			else:
 				tekstr = trl.translate(teks, dest=target2, src=target)
 				send_message(update.effective_message, tl(update.effective_message, "Diterjemahkan dari `{}` ke `{}`:\n`{}`").format(target, target2, tekstr.text), parse_mode=ParseMode.MARKDOWN)
-			
+
 		else:
 			args = update.effective_message.text.split(None, 2)
 			if len(args) != 1:
@@ -217,7 +223,7 @@ def terjemah(bot: Bot, update: Update):
 					teks = teks.replace(emoji, '')
 			message = update.effective_message
 			trl = Translator()
-			if target2 == None:
+			if target2 is None:
 				deteksibahasa = trl.detect(teks)
 				tekstr = trl.translate(teks, dest=target)
 				return send_message(update.effective_message, tl(update.effective_message, "Diterjemahkan dari `{}` ke `{}`:\n`{}`").format(deteksibahasa.lang, target, tekstr.text), parse_mode=ParseMode.MARKDOWN)
@@ -257,10 +263,7 @@ def wiki(bot: Bot, update: Update):
 		return
 	except wikipedia.exceptions.DisambiguationError as refer:
 		rujuk = str(refer).split("\n")
-		if len(rujuk) >= 6:
-			batas = 6
-		else:
-			batas = len(rujuk)
+		batas = min(len(rujuk), 6)
 		teks = ""
 		for x in range(batas):
 			if x == 0:
@@ -269,7 +272,7 @@ def wiki(bot: Bot, update: Update):
 				else:
 					teks += rujuk[x]+"\n"
 			else:
-				teks += "- `"+rujuk[x]+"`\n"
+				teks += f"- `{rujuk[x]}" + "`\n"
 		send_message(update.effective_message, teks, parse_mode="markdown")
 		return
 	except IndexError:
@@ -282,8 +285,17 @@ def wiki(bot: Bot, update: Update):
 	else:
 		if len(summary) >= 200:
 			judul = pagewiki.title
-			summary = summary[:200]+"..."
-			button = InlineKeyboardMarkup([[InlineKeyboardButton(text=tl(update.effective_message, "Baca Lebih Lengkap"), url="t.me/{}?start=wiki-{}".format(bot.username, teks.replace(' ', '_')))]])
+			summary = f"{summary[:200]}..."
+			button = InlineKeyboardMarkup(
+				[
+					[
+						InlineKeyboardButton(
+							text=tl(update.effective_message, "Baca Lebih Lengkap"),
+							url=f"t.me/{bot.username}?start=wiki-{teks.replace(' ', '_')}",
+						)
+					]
+				]
+			)
 		else:
 			button = None
 		send_message(update.effective_message, tl(update.effective_message, "Hasil dari {} adalah:\n\n<b>{}</b>\n{}").format(teks, judul, summary), parse_mode=ParseMode.HTML, reply_markup=button)
@@ -301,21 +313,22 @@ def kamusbesarbahasaindonesia(bot: Bot, update: Update):
 		teks = args[1]
 		message = update.effective_message
 		try:
-			api = requests.get('http://kateglo.com/api.php?format=json&phrase='+teks).json()
+			api = requests.get(
+				f'http://kateglo.com/api.php?format=json&phrase={teks}'
+			).json()
 		except json.decoder.JSONDecodeError:
 			send_message(update.effective_message, "Hasil tidak ditemukan!", parse_mode=ParseMode.MARKDOWN)
 			return
 		#kamusid = KBBI(teks)
-		parsing = "***Hasil dari kata {} ({}) di {}***\n\n".format(api['kateglo']['phrase'], api['kateglo']['lex_class_name'], api['kateglo']['ref_source_name'])
+		parsing = f"***Hasil dari kata {api['kateglo']['phrase']} ({api['kateglo']['lex_class_name']}) di {api['kateglo']['ref_source_name']}***\n\n"
 		if len(api['kateglo']['definition']) >= 6:
 			jarak = 5
 		else:
 			jarak = len(api['kateglo']['definition'])
 		for x in range(jarak):
-			parsing += "*{}.* {}".format(x+1, api['kateglo']['definition'][x]['def_text'])
-			contoh = api['kateglo']['definition'][x]['sample']
-			if contoh:
-				parsing += "\nContoh: `{}`".format(str(BeautifulSoup(contoh, "lxml")).replace('<html><body><p>', '').replace('</p></body></html>', ''))
+			parsing += f"*{x + 1}.* {api['kateglo']['definition'][x]['def_text']}"
+			if contoh := api['kateglo']['definition'][x]['sample']:
+				parsing += f"""\nContoh: `{str(BeautifulSoup(contoh, "lxml")).replace('<html><body><p>', '').replace('</p></body></html>', '')}`"""
 			parsing += "\n\n"
 		send_message(update.effective_message, parsing, parse_mode=ParseMode.MARKDOWN)
 
@@ -340,28 +353,31 @@ def kitabgaul(bot: Bot, update: Update):
 	except IndexError:
 		trend = requests.get("https://kitabgaul.com/api/entries;trending").json()
 		best = requests.get("https://kitabgaul.com/api/entries;best").json()
-		tbalas = ""
-		bbalas = ""
 		if len(trend.get('entries')) == 0:
 			return send_message(update.effective_message, "Tidak ada Hasil yang ditampilkan!", parse_mode=ParseMode.MARKDOWN)
-		for x in range(3):
-			tbalas += "*{}. {}*\n*Slug:* `{}`\n*Definisi:* `{}`\n*Contoh:* `{}`\n\n".format(x+1, trend.get('entries')[x].get('word'), trend.get('entries')[x].get('slug'), trend.get('entries')[x].get('definition'), trend.get('entries')[x].get('example'))
+		tbalas = "".join(
+			f"*{x + 1}. {trend.get('entries')[x].get('word')}*\n*Slug:* `{trend.get('entries')[x].get('slug')}`\n*Definisi:* `{trend.get('entries')[x].get('definition')}`\n*Contoh:* `{trend.get('entries')[x].get('example')}`\n\n"
+			for x in range(3)
+		)
 		if len(best.get('entries')) == 0:
 			return send_message(update.effective_message, "Tidak ada Hasil yang ditampilkan!", parse_mode=ParseMode.MARKDOWN)
-		for x in range(3):
-			bbalas += "*{}. {}*\n*Slug:* `{}`\n*Definisi:* `{}`\n*Contoh:* `{}`\n\n".format(x+1, best.get('entries')[x].get('word'), best.get('entries')[x].get('slug'), best.get('entries')[x].get('definition'), best.get('entries')[x].get('example'))
-		balas = "*<== Trending saat ini ==>*\n\n{}*<== Terbaik saat ini ==>*\n\n{}".format(tbalas, bbalas)
+		bbalas = "".join(
+			f"*{x + 1}. {best.get('entries')[x].get('word')}*\n*Slug:* `{best.get('entries')[x].get('slug')}`\n*Definisi:* `{best.get('entries')[x].get('definition')}`\n*Contoh:* `{best.get('entries')[x].get('example')}`\n\n"
+			for x in range(3)
+		)
+		balas = f"*<== Trending saat ini ==>*\n\n{tbalas}*<== Terbaik saat ini ==>*\n\n{bbalas}"
 		send_message(update.effective_message, balas, parse_mode=ParseMode.MARKDOWN)
-	kbgaul = requests.get("https://kitabgaul.com/api/entries/{}".format(teks)).json()
-	balas = "*Hasil dari {}*\n\n".format(teks)
+	kbgaul = requests.get(f"https://kitabgaul.com/api/entries/{teks}").json()
+	balas = f"*Hasil dari {teks}*\n\n"
 	if len(kbgaul.get('entries')) == 0:
-		return send_message(update.effective_message, "Tidak ada Hasil dari {}".format(teks), parse_mode=ParseMode.MARKDOWN)
-	if len(kbgaul.get('entries')) >= 3:
-		jarak = 3
-	else:
-		jarak = len(kbgaul.get('entries'))
+		return send_message(
+			update.effective_message,
+			f"Tidak ada Hasil dari {teks}",
+			parse_mode=ParseMode.MARKDOWN,
+		)
+	jarak = min(len(kbgaul.get('entries')), 3)
 	for x in range(jarak):
-		balas += "*{}. {}*\n*Slug:* `{}`\n*Definisi:* `{}`\n*Contoh:* `{}`\n\n".format(x+1, kbgaul.get('entries')[x].get('word'), kbgaul.get('entries')[x].get('slug'), kbgaul.get('entries')[x].get('definition'), kbgaul.get('entries')[x].get('example'))
+		balas += f"*{x + 1}. {kbgaul.get('entries')[x].get('word')}*\n*Slug:* `{kbgaul.get('entries')[x].get('slug')}`\n*Definisi:* `{kbgaul.get('entries')[x].get('definition')}`\n*Contoh:* `{kbgaul.get('entries')[x].get('example')}`\n\n"
 	send_message(update.effective_message, balas, parse_mode=ParseMode.MARKDOWN)
 
 @run_async
@@ -377,19 +393,23 @@ def urbandictionary(bot: Bot, update: Update, args):
 		try:
 			mean = urbandict.define(text)
 		except Exception as err:
-			send_message(update.effective_message, "Error: " + str(err))
+			send_message(update.effective_message, f"Error: {str(err)}")
 			return
 		if len(mean) >= 0:
 			teks = ""
 			if len(mean) >= 3:
 				for x in range(3):
-					teks = "*Result of {}*\n\n*{}*\n*Meaning:*\n`{}`\n\n*Example:*\n`{}`\n\n".format(text, mean[x].get("word")[:-7], mean[x].get("def"), mean[x].get("example"))
+					teks = f'*Result of {text}*\n\n*{mean[x].get("word")[:-7]}*\n*Meaning:*\n`{mean[x].get("def")}`\n\n*Example:*\n`{mean[x].get("example")}`\n\n'
 			else:
 				for x in range(len(mean)):
-					teks = "*Result of {}*\n\n*{}*\n**Meaning:*\n`{}`\n\n*Example:*\n`{}`\n\n".format(text, mean[x].get("word")[:-7], mean[x].get("def"), mean[x].get("example"))
+					teks = f'*Result of {text}*\n\n*{mean[x].get("word")[:-7]}*\n**Meaning:*\n`{mean[x].get("def")}`\n\n*Example:*\n`{mean[x].get("example")}`\n\n'
 			send_message(update.effective_message, teks, parse_mode=ParseMode.MARKDOWN)
 		else:
-			send_message(update.effective_message, "{} couldn't be found in urban dictionary!".format(text), parse_mode=ParseMode.MARKDOWN)
+			send_message(
+				update.effective_message,
+				f"{text} couldn't be found in urban dictionary!",
+				parse_mode=ParseMode.MARKDOWN,
+			)
 	else:
 		send_message(update.effective_message, "Use `/ud <text` for search meaning from urban dictionary.", parse_mode=ParseMode.MARKDOWN)
 

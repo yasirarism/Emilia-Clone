@@ -54,12 +54,7 @@ def purge(bot: Bot, update: Update, args: List[str]) -> str:
                     LOGGER.exception("Error while purging chat messages.")
 
             send_message(update.effective_message, tl(update.effective_message, "Pembersihan selesai."))
-            return "<b>{}:</b>" \
-                   "\n#PURGE" \
-                   "\n<b>Admin:</b> {}" \
-                   "\nPurged <code>{}</code> messages.".format(html.escape(chat.title),
-                                                               mention_html(user.id, user.first_name),
-                                                               delete_to - message_id)
+            return f"<b>{html.escape(chat.title)}:</b>\n#PURGE\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\nPurged <code>{delete_to - message_id}</code> messages."
 
     else:
         send_message(update.effective_message, tl(update.effective_message, "Balas pesan untuk memilih tempat mulai membersihkan."))
@@ -80,11 +75,7 @@ def del_message(bot: Bot, update: Update) -> str:
         if can_delete(chat, bot.id):
             update.effective_message.reply_to_message.delete()
             update.effective_message.delete()
-            return "<b>{}:</b>" \
-                   "\n#DEL" \
-                   "\n<b>Admin:</b> {}" \
-                   "\nMessage deleted.".format(html.escape(chat.title),
-                                               mention_html(user.id, user.first_name))
+            return f"<b>{html.escape(chat.title)}:</b>\n#DEL\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\nMessage deleted."
     else:
         send_message(update.effective_message, tl(update.effective_message, "Apa yang ingin di hapus?"))
 

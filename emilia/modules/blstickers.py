@@ -34,28 +34,26 @@ def blackliststicker(bot: Bot, update: Update, args: List[str]):
 	spam = spamfilters(update.effective_message.text, update.effective_message.from_user.id, update.effective_chat.id, update.effective_message)
 	if spam == True:
 		return
-		
-	conn = connected(bot, update, chat, user.id, need_admin=False)
-	if conn:
+
+	if conn := connected(bot, update, chat, user.id, need_admin=False):
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
 	else:
 		if chat.type == "private":
 			return
-		else:
-			chat_id = update.effective_chat.id
-			chat_name = chat.title
-		
+		chat_id = update.effective_chat.id
+		chat_name = chat.title
+
 	sticker_list = tl(update.effective_message, "<b>Daftar hitam stiker saat saat ini di {}:</b>\n").format(chat_name)
 
 	all_stickerlist = sql.get_chat_stickers(chat_id)
 
-	if len(args) > 0 and args[0].lower() == 'copy':
+	if args and args[0].lower() == 'copy':
 		for trigger in all_stickerlist:
-			sticker_list += "<code>{}</code>\n".format(html.escape(trigger))
-	elif len(args) == 0:
+			sticker_list += f"<code>{html.escape(trigger)}</code>\n"
+	elif not args:
 		for trigger in all_stickerlist:
-			sticker_list += " - <code>{}</code>\n".format(html.escape(trigger))
+			sticker_list += f" - <code>{html.escape(trigger)}</code>\n"
 
 	split_text = split_message(sticker_list)
 	for text in split_text:
@@ -77,8 +75,7 @@ def add_blackliststicker(bot: Bot, update: Update):
 	if spam == True:
 		return
 
-	conn = connected(bot, update, chat, user.id)
-	if conn:
+	if conn := connected(bot, update, chat, user.id):
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
 	else:
@@ -90,7 +87,9 @@ def add_blackliststicker(bot: Bot, update: Update):
 
 	if len(words) > 1:
 		text = words[1].replace('https://t.me/addstickers/', '')
-		to_blacklist = list(set(trigger.strip() for trigger in text.split("\n") if trigger.strip()))
+		to_blacklist = list(
+			{trigger.strip() for trigger in text.split("\n") if trigger.strip()}
+		)
 		added = 0
 		for trigger in to_blacklist:
 			try:
@@ -111,7 +110,7 @@ def add_blackliststicker(bot: Bot, update: Update):
 	elif msg.reply_to_message:
 		added = 0
 		trigger = msg.reply_to_message.sticker.set_name
-		if trigger == None:
+		if trigger is None:
 			send_message(update.effective_message, tl(update.effective_message, "Stiker tidak valid!"))
 			return
 		try:
@@ -140,8 +139,7 @@ def unblackliststicker(bot: Bot, update: Update):
 	if spam == True:
 		return
 
-	conn = connected(bot, update, chat, user.id)
-	if conn:
+	if conn := connected(bot, update, chat, user.id):
 		chat_id = conn
 		chat_name = dispatcher.bot.getChat(conn).title
 	else:
@@ -154,7 +152,9 @@ def unblackliststicker(bot: Bot, update: Update):
 
 	if len(words) > 1:
 		text = words[1].replace('https://t.me/addstickers/', '')
-		to_unblacklist = list(set(trigger.strip() for trigger in text.split("\n") if trigger.strip()))
+		to_unblacklist = list(
+			{trigger.strip() for trigger in text.split("\n") if trigger.strip()}
+		)
 		successful = 0
 		for trigger in to_unblacklist:
 			success = sql.rm_from_stickers(chat_id, trigger.lower())
@@ -183,12 +183,10 @@ def unblackliststicker(bot: Bot, update: Update):
 				parse_mode=ParseMode.HTML)
 	elif msg.reply_to_message:
 		trigger = msg.reply_to_message.sticker.set_name
-		if trigger == None:
+		if trigger is None:
 			send_message(update.effective_message, tl(update.effective_message, "Stiker tidak valid!"))
 			return
-		success = sql.rm_from_stickers(chat_id, trigger.lower())
-
-		if success:
+		if success := sql.rm_from_stickers(chat_id, trigger.lower()):
 			send_message(update.effective_message, tl(update.effective_message, "Stiker <code>{}</code> dihapus dari daftar hitam di <b>{}</b>!").format(trigger, chat_name),
 							   parse_mode=ParseMode.HTML)
 		else:
@@ -221,10 +219,10 @@ def blacklist_mode(bot: Bot, update: Update, args: List[str]):
 		chat_name = update.effective_message.chat.title
 
 	if args:
-		if args[0].lower() == 'off' or args[0].lower() == 'nothing' or args[0].lower() == 'no':
+		if args[0].lower() in ['off', 'nothing', 'no']:
 			settypeblacklist = tl(update.effective_message, 'di matikan')
 			sql.set_blacklist_strength(chat_id, 0, "0")
-		elif args[0].lower() == 'del' or args[0].lower() == 'delete':
+		elif args[0].lower() in ['del', 'delete']:
 			settypeblacklist = tl(update.effective_message, 'di biarkan, pesannya akan dihapus')
 			sql.set_blacklist_strength(chat_id, 1, "0")
 		elif args[0].lower() == 'warn':
@@ -265,10 +263,7 @@ Contoh nilai waktu: 4m = 4 menit, 3h = 3 jam, 6d = 6 hari, 5w = 5 minggu.""")
 		else:
 			text = tl(update.effective_message, "Mode blacklist sticker diubah, Pengguna akan `{}`!").format(settypeblacklist)
 		send_message(update.effective_message, text, parse_mode="markdown")
-		return "<b>{}:</b>\n" \
-				"<b>Admin:</b> {}\n" \
-				"Changed sticker blacklist mode. Will {}.".format(html.escape(chat.title),
-																			mention_html(user.id, user.first_name), settypeblacklist)
+		return f"<b>{html.escape(chat.title)}:</b>\n<b>Admin:</b> {mention_html(user.id, user.first_name)}\nChanged sticker blacklist mode. Will {settypeblacklist}."
 	else:
 		getmode, getvalue = sql.get_blacklist_setting(chat.id)
 		if getmode == 0:
@@ -325,8 +320,7 @@ def del_blackliststicker(bot: Bot, update: Update):
 					return
 				elif getmode == 4:
 					message.delete()
-					res = chat.unban_member(update.effective_user.id)
-					if res:
+					if res := chat.unban_member(update.effective_user.id):
 						bot.sendMessage(chat.id, tl(update.effective_message, "{} di tendang karena menggunakan stiker '{}' yang ada di daftar hitam stiker").format(mention_markdown(user.id, user.first_name), trigger), parse_mode="markdown")
 					return
 				elif getmode == 5:
@@ -347,9 +341,7 @@ def del_blackliststicker(bot: Bot, update: Update):
 					bot.sendMessage(chat.id, tl(update.effective_message, "{} di bisukan selama {} karena menggunakan stiker '{}' yang ada di daftar hitam stiker").format(mention_markdown(user.id, user.first_name), value, trigger), parse_mode="markdown")
 					return
 			except BadRequest as excp:
-				if excp.message == "Message to delete not found":
-					pass
-				else:
+				if excp.message != "Message to delete not found":
 					LOGGER.exception("Error while deleting blacklist message.")
 				break
 
